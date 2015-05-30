@@ -8,26 +8,10 @@
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- */
-
-/*
-
 
 Based on blushcomp mono by Sampo Savolainen
-
-
-
- contort'o'comp
- warp
- garble
- 
-
- impact
-
-*/
-//faust2jaqt -vec -lv 1 -quad -t 999999 -time blushcomp.dsp && ./blushcomp
-
-declare name      "CleanComp";
+ */
+declare name      "CharacterCompressor";
 declare author    "Bart Brouns";
 declare version   "0.2";
 declare copyright "(C) 2014 Bart Brouns";
