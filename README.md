@@ -8,7 +8,7 @@ Also; I have no idea what to name the parameters, or how to explain a lot of the
 - install faust
 - copy the repo
 - cd to it
-- run faust2jack LazyLimiter.dsp
-- run ./LazyLimiter
+- run faust2jack CharacterCompressor.dsp
+- run ./CharacterCompressor
 
 There is also faust2lv2, faust2alsa, and about 30 more variants.
