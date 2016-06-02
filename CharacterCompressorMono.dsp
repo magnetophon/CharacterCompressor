@@ -1,3 +1,3 @@
 import("lib/CharacterCompressor.lib");
 
-process =midStereoBlushComp;
+process =blushcomp;
