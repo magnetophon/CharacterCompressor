@@ -20,10 +20,11 @@ before_script:
 # - sudo apt-get -qq update
 # - sudo apt-get install --force-yes faust
 
+- echo $PWD
 - git clone git://git.code.sf.net/p/faudiostream/code /tmp/faust
 - cd /tmp/faust
 - make
-- make install
+- sudo make install
 script:
 - faust -v
 - faust CharacterCompressor.dsp
