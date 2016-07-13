@@ -2,8 +2,8 @@
 language: generic
 sudo: required
 before_install:
-- wget https://launchpad.net/ubuntu/+source/faust/0.9.73~repack1-2/+build/10456646/+files/faust_0.9.73~repack1-2_i386.deb
-- sudo dpkg -i faust_0.9.73~repack1-2_i386.deb
+- sudo apt-get -qq update
+- sudo apt-get install -y faust
 script: 
 - faust2firefox CharacterCompressor.dsp                  
 after_success:
