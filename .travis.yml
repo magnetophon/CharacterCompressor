@@ -34,3 +34,7 @@ after_success:
 
 after_failure:
 - echo "Something went wrong..."
+notifications:
+  email:
+    on_success: never
+    on_failure: always
