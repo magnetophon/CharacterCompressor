@@ -3,19 +3,18 @@ language: generic
 sudo: required
 dist: trusty
 before_script:
-- sudo apt-get install libjack-jackd2-dev jackd2
+- sudo apt-get install libjack-jackd2-dev jackd2 coreutils
 - git clone git://git.code.sf.net/p/faudiostream/code /tmp/faust
 - pushd  /tmp/faust
 - make
 - sudo make install
 - popd
-# - export AUDIODEV=null
+- jackd -vdr dummy &
 script:
 - faust -v
 - faust CharacterCompressor.dsp
 - time faust2jackconsole  -t 9999999 -time -osc CharacterCompressor.dsp
-- jackd -vd dummy
-- ./CharacterCompressor
+- timeout 10 ./CharacterCompressor
 after_success:
 - echo "Success!"
 
