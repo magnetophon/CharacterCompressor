@@ -1,15 +1,15 @@
 # language: faust
 language: generic
 before_install:
-          - sudo apt-get -qq update
-              - sudo apt-get install -y faust
+- sudo apt-get -qq update
+- sudo apt-get install -y faust
 script: 
-            - faust2firefox CharacterCompressor.dsp                  
+- faust2firefox CharacterCompressor.dsp                  
 after_success:
-            - echo "Success!"
+- echo "Success!"
 
 after_failure:
-            - echo "Something went wrong..."
+- echo "Something went wrong..."
 
         
 
