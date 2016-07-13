@@ -3,7 +3,7 @@ language: generic
 sudo: required
 dist: trusty
 before_script:
-- sudo apt-get install libasound2-dev
+- sudo apt-get install libjack-jackd2-dev jackd2
 - git clone git://git.code.sf.net/p/faudiostream/code /tmp/faust
 - pushd  /tmp/faust
 - make
@@ -13,8 +13,9 @@ before_script:
 script:
 - faust -v
 - faust CharacterCompressor.dsp
-- time faust2alsaconsole  -t 9999999 -time -osc CharacterCompressor.dsp
-# - ./CharacterCompressor
+- time faust2jackconsole  -t 9999999 -time -osc CharacterCompressor.dsp
+- jackd -vd dummy
+- ./CharacterCompressor
 after_success:
 - echo "Success!"
 
