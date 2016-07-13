@@ -1,17 +1,18 @@
 # language: faust
 language: generic
 sudo: required
-addons:
-   apt:
-     sources:
-     # - debian-sid
-     - ubuntu-toolchain-r-test
-     packages:
-     - faust
-#before_install:
-#- sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-#- sudo apt-get -qq update
-#- sudo apt-get install -y faust
+# addons:
+#    apt:
+#      sources:
+#      # - debian-sid
+#      - ubuntu-toolchain-r-test
+#      packages:
+#      - faust
+
+before_install:
+- sudo add-apt-repository deb http://ftp.us.debian.org/debian testing main contrib non-free
+- sudo apt-get -qq update
+- sudo apt-get install -y faust
 script:
 - faust -v
 - faust CharacterCompressor.dsp
