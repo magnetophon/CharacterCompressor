@@ -13,7 +13,7 @@ script:
 - faust -v
 - faust CharacterCompressor.dsp
 - time faust2jackconsole  -t 9999999 -time -osc CharacterCompressor.dsp
-- jackd -vdr dummy &
+- jackd -vr -d dummy &
 - timeout 10 ./CharacterCompressor
 after_success:
 - echo "Success!"
