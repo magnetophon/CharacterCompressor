@@ -1,4 +1,4 @@
-language: faust
+# language: faust
 install:  faust
 script: faust2firefox CharacterCompressor.dsp
 
