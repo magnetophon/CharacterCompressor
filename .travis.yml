@@ -12,6 +12,7 @@ before_script:
 # - curl https://ftp-master.debian.org/keys/archive-key-5.0.asc | sudo apt-key add -
 # - echo "deb http://ftp.us.debian.org/debian stable main contrib" | sudo tee -a /etc/apt/sources.list
 # - sudo add-apt-repository ppa:dr-graef/faust.trusty -y
+- sudo apt-get install apt-transport-https software-properties-common wget
 - wget https://launchpad.net/~kxstudio-debian/+archive/kxstudio/+files/kxstudio-repos_9.2.2~kxstudio1_all.deb
 - sudo dpkg -i kxstudio-repos_9.2.2~kxstudio1_all.deb
 - sudo apt-get -qq update
