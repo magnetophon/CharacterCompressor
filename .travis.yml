@@ -1,5 +1,14 @@
 # language: faust
+language: cpp
 install:  faust
+script: 
+            - make linux
+                  
+after_success:
+            - echo "Success!"
+
+after_failure:
+            - echo "Something went wrong..."
 script: faust2firefox CharacterCompressor.dsp
 
         
