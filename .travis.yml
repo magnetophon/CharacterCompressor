@@ -2,25 +2,7 @@
 language: generic
 sudo: required
 dist: trusty
-# addons:
-#    apt:
-#      sources:
-#      # - debian-sid
-#      - ubuntu-toolchain-r-test
-#      packages:
-#      - faust
 before_script:
-# - curl https://ftp-master.debian.org/keys/archive-key-5.0.asc | sudo apt-key add -
-# - echo "deb http://ftp.us.debian.org/debian stable main contrib" | sudo tee -a /etc/apt/sources.list
-# - sudo add-apt-repository ppa:dr-graef/faust.trusty -y
-
-# - sudo apt-get install apt-transport-https software-properties-common wget
-# - wget https://launchpad.net/~kxstudio-debian/+archive/kxstudio/+files/kxstudio-repos_9.2.2~kxstudio1_all.deb
-# - sudo dpkg -i kxstudio-repos_9.2.2~kxstudio1_all.deb
-# - sudo apt-get -qq update
-# - sudo apt-get install --force-yes faust
-
-- echo $PWD
 - git clone git://git.code.sf.net/p/faudiostream/code /tmp/faust
 - pushd  /tmp/faust
 - make
@@ -29,7 +11,8 @@ before_script:
 script:
 - faust -v
 - faust CharacterCompressor.dsp
-  #- faust2firefox CharacterCompressor.dsp
+- time faust2alsaconsole  -t 9999999 -time -osc CharacterCompressor.dsp
+- ./CharacterCompressor
 after_success:
 - echo "Success!"
 
