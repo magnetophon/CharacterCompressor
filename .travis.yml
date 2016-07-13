@@ -1,6 +1,8 @@
 # language: faust
-language: cpp
-install:  faust
+language: generic
+before_install:
+          - sudo apt-get -qq update
+              - sudo apt-get install -y faust
 script: 
             - faust2firefox CharacterCompressor.dsp                  
 after_success:
