@@ -9,12 +9,12 @@ before_script:
 - make
 - sudo make install
 - popd
-- export AUDIODEV=null
+# - export AUDIODEV=null
 script:
 - faust -v
 - faust CharacterCompressor.dsp
 - time faust2alsaconsole  -t 9999999 -time -osc CharacterCompressor.dsp
-- ./CharacterCompressor
+# - ./CharacterCompressor
 after_success:
 - echo "Success!"
 
