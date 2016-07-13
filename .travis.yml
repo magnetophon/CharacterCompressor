@@ -22,9 +22,10 @@ before_script:
 
 - echo $PWD
 - git clone git://git.code.sf.net/p/faudiostream/code /tmp/faust
-- cd /tmp/faust
+- pushd  /tmp/faust
 - make
 - sudo make install
+- popd
 script:
 - faust -v
 - faust CharacterCompressor.dsp
