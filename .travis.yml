@@ -3,7 +3,7 @@ language: generic
 sudo: required
 dist: trusty
 before_script:
-- sudo apt-get install libjack-jackd2-dev jackd2 coreutils
+- sudo apt-get install libjack-jackd2-dev jackd2
 - git clone git://git.code.sf.net/p/faudiostream/code /tmp/faust
 - pushd  /tmp/faust
 - make
