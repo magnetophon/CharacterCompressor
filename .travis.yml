@@ -2,12 +2,12 @@ language: generic
 sudo: required
 dist: trusty
 
-# cache:
-#   directories:
-#   - /usr/bin
+cache:
+  directories:
+  - $HOME/local
 
 install:
-  # build either the dependencies (1) and cache them, or the dsp (0)
+  # build either the dependencies (1) and cache them, or build the dsp (0)
   - export BUILD_DEPS=1
   - if [ $BUILD_DEPS == 1 ];
     then
