@@ -3,6 +3,8 @@ language: generic
 sudo: required
 dist: trusty
 before_script:
+- sudo apt-get -qq update
+
 # - sudo apt-get build-dep libjack-jackd2-dev jackd2
 # - git clone https://github.com/jackaudio/jack2.git /tmp/jack
 # - pushd /tmp/jack
@@ -17,32 +19,37 @@ before_script:
 - sudo make install
 - popd
 
-# - sudo apt-get install -yy  libboost-all-dev ladspa-sdk liblilv-dev lv2-dev libserd-dev libsord-dev libsratom-dev
-# # - sudo apt-get install ladspa-sdk
-# - git clone https://github.com/cth103/plugin-torture.git /tmp/plugin-torture
-# - pushd /tmp/plugin-torture
-# - make
-# # - sudo make install
-# - sudo cp plugin-torture /usr/bin/
-# - popd
+- sudo apt-get install -yy  libboost-all-dev ladspa-sdk liblilv-dev lv2-dev libserd-dev libsord-dev libsratom-dev
+- git clone https://github.com/cth103/plugin-torture.git /tmp/plugin-torture
+- pushd /tmp/plugin-torture
+- make
+# - sudo make install
+- sudo cp plugin-torture /usr/bin/
+- popd
 
-- wget https://github.com/moddevices/caps-lv2/raw/master/.create_lv2_env.sh
-- bash .create_lv2_env.sh
-- git clone https://github.com/moddevices/lv2bm
-- cd lv2bm && make && sudo make PREFIX=/usr install && cd ..
+# - wget https://github.com/moddevices/caps-lv2/raw/master/.create_lv2_env.sh
+# - bash .create_lv2_env.sh
+# - git clone https://github.com/moddevices/lv2bm
+# - cd lv2bm && make && sudo make PREFIX=/usr install && cd ..
 script:
 - faust -v
+
 # - faust CharacterCompressor.dsp
+
 # - time faust2jackconsole  -t 9999999 -time -osc CharacterCompressor.dsp
 # - jackd -vr -d dummy &
 # - timeout 10 ./CharacterCompressor
-- sudo apt-get install -yy libboost-all-dev
-- time faust2lv2  -t 9999999 -time CharacterCompressor.dsp
-- lv2bm `lv2ls`
+
+# - sudo apt-get install -yy libboost-all-dev
+# - time faust2lv2  -t 9999999 -time CharacterCompressor.dsp
+
+# - lv2bm `lv2ls`
+
 # - plugin-torture --evil -d --lv2 --plugin $plugins/manifest.ttl | tee >(>> $DIR/lv2-evil.txt) | grep 'WARNING'
-# - time faust2ladspa  -t 9999999 -time CharacterCompressor.dsp
-# - ls
-# - plugin-torture --evil -d --ladspa --plugin CharacterCompressor.so | tee >(>> ladspa-evil.txt) | grep 'WARNING'
+
+- time faust2ladspa  -t 9999999 -time CharacterCompressor.dsp
+- ls
+- plugin-torture --evil -d --ladspa --plugin CharacterCompressor.so
 
 after_success:
 - echo "Success!"
