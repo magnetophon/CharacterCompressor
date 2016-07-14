@@ -7,7 +7,7 @@ dist: trusty
 #   directories:
 #   - /usr/bin
 
-before_script:
+install:
 - sudo apt-get -qq update
 - mkdir -p $HOME/local/{bin,include,lib,share}
 
