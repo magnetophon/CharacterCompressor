@@ -36,6 +36,7 @@ script:
 # - time faust2jackconsole  -t 9999999 -time -osc CharacterCompressor.dsp
 # - jackd -vr -d dummy &
 # - timeout 10 ./CharacterCompressor
+- sudo apt-get install -yy libboost-all-dev
 - time faust2lv2  -t 9999999 -time CharacterCompressor.dsp
 - lv2bm `lv2ls`
 # - plugin-torture --evil -d --lv2 --plugin $plugins/manifest.ttl | tee >(>> $DIR/lv2-evil.txt) | grep 'WARNING'
