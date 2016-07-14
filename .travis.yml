@@ -53,11 +53,9 @@ script:
 
 after_success:
   - echo "Success!"
-  - find /usr/local
 
 after_failure:
   - echo "Something went wrong..."
-  - find /usr/local
 
 notifications:
   email:
