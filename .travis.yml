@@ -8,7 +8,6 @@ dist: trusty
 #   - /usr/bin
 
 install:
-
   # build either the dependencies (1) and cache them, or the dsp (0)
   - export BUILD_DEPS=1
 
@@ -86,7 +85,7 @@ script:
       lv2bm `lv2ls`
   #   lv2bm --full-test `lv2ls`
 
-  #   plugin-torture --evil -d --lv2 --plugin $plugins/manifest.ttl | tee >(>> $DIR/lv2-evil.txt) | grep 'WARNING'
+  #   plugin-torture --evil -d --lv2 --plugin $plugins/manifest.ttl
 
       plugin-torture --evil -d --ladspa --plugin CharacterCompressor.so
     fi
