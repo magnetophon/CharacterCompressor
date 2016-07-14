@@ -55,9 +55,8 @@ script:
 
 # # build lv2
 - echo "building lv2"
-- sudo apt-get install -yy libboost-all-dev
 - time faust2lv2  -t 9999999 -time CharacterCompressor.dsp
-- cp -r CharacterCompressor.lv2 ~/.lv2/
+- cp -r CharacterCompressor.lv2/ ~/.lv2/
 
 # # build ladspa
 - echo "building ladspa"
