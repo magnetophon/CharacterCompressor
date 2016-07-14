@@ -1,4 +1,7 @@
 # CharacterCompressor
+
+[![Build Status](https://travis-ci.org/magnetophon/CharacterCompressor.svg?branch=master)](https://travis-ci.org/magnetophon/CharacterCompressor)
+
 A compressor with character.
 
 A bit experimental: It works and sounds wonderfull, but has too many parameters, so is a bit fiddly to use.
