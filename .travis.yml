@@ -10,7 +10,7 @@ before_script:
 # - ./waf build
 # - sudo ./waf install
 - sudo apt-get build-dep -yy faust
-- sudo apt-get install -yy boost ladspa-sdk lilv lv2-dev serd sord sratom
+- sudo apt-get install -yy  libboost-all-dev ladspa-sdk liblilv-dev lv2-dev libserd-dev libsord-dev libsratom-dev
 # - sudo apt-get install ladspa-sdk
 - git clone https://github.com/cth103/plugin-torture.git /tmp/plugin-torture
 - pushd /tmp/plugin-torture
