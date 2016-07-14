@@ -5,15 +5,8 @@ dist: trusty
 before_script:
 - sudo apt-get -qq update
 
-# # install jackd2 from git
-# - sudo apt-get build-dep libjack-jackd2-dev jackd2
-# - git clone https://github.com/jackaudio/jack2.git /tmp/jack
-# - pushd /tmp/jack
-# - ./waf configure
-# - ./waf build
-# - sudo ./waf install
-
 # # install faust from git
+- echo "install faust"
 - sudo apt-get build-dep -yy faust
 - git clone git://git.code.sf.net/p/faudiostream/code /tmp/faust
 - pushd  /tmp/faust
@@ -21,7 +14,17 @@ before_script:
 - sudo make install
 - popd
 
+# # install jackd2 from git
+# - echo "install jackd2"
+# - sudo apt-get build-dep libjack-jackd2-dev jackd2
+# - git clone https://github.com/jackaudio/jack2.git /tmp/jack
+# - pushd /tmp/jack
+# - ./waf configure
+# - ./waf build
+# - sudo ./waf install
+
 # # install plugin-torture from git
+- echo "install plugin-torture"
 - sudo apt-get install -yy  libboost-all-dev ladspa-sdk liblilv-dev lv2-dev libserd-dev libsord-dev libsratom-dev
 - git clone https://github.com/cth103/plugin-torture.git /tmp/plugin-torture
 - pushd /tmp/plugin-torture
@@ -31,31 +34,40 @@ before_script:
 - popd
 
 # # install lv2bm from git
-# - wget https://github.com/moddevices/caps-lv2/raw/master/.create_lv2_env.sh
-# - bash .create_lv2_env.sh
-# - git clone https://github.com/moddevices/lv2bm
-# - cd lv2bm && make && sudo make PREFIX=/usr install && cd ..
+- echo "install lv2bm"
+- wget https://github.com/moddevices/caps-lv2/raw/master/.create_lv2_env.sh
+- bash .create_lv2_env.sh
+- git clone https://github.com/moddevices/lv2bm
+- cd lv2bm && make && sudo make PREFIX=/usr install && cd ..
+
 script:
 - faust -v
 
 # - faust CharacterCompressor.dsp
 
 # # build jack console application
-# - time faust2jackconsole  -t 9999999 -time -osc CharacterCompressor.dsp
+- echo "building jack console application"
+- time faust2jackconsole  -t 9999999 -time -osc CharacterCompressor.dsp
+
+# # build lv2
+- echo "building lv2"
+- sudo apt-get install -yy libboost-all-dev
+- time faust2lv2  -t 9999999 -time CharacterCompressor.dsp
+- cp -r CharacterCompressor.lv2 ~/.lv2/
+
+# # build ladspa
+- echo "building ladspa"
+- time faust2ladspa  -t 9999999 -time CharacterCompressor.dsp
+
+- echo "starting tests"
 # - jackd -vr -d dummy &
 # - timeout 10 ./CharacterCompressor
 
-# # build lv2
-# - sudo apt-get install -yy libboost-all-dev
-# - time faust2lv2  -t 9999999 -time CharacterCompressor.dsp
 
-# - lv2bm `lv2ls`
+- lv2bm `lv2ls`
 
 # - plugin-torture --evil -d --lv2 --plugin $plugins/manifest.ttl | tee >(>> $DIR/lv2-evil.txt) | grep 'WARNING'
 
-# # build ladspa
-- time faust2ladspa  -t 9999999 -time CharacterCompressor.dsp
-- ls
 - plugin-torture --evil -d --ladspa --plugin CharacterCompressor.so
 
 after_success:
