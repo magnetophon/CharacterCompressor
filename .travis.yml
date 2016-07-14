@@ -9,13 +9,14 @@ dist: trusty
 
 before_script:
 - sudo apt-get -qq update
+- mkdir -p $HOME/local/{bin,include,lib,share}
 
 # # install faust from git
 - echo "install faust"
 - sudo apt-get build-dep -yy faust
 - git clone git://git.code.sf.net/p/faudiostream/code /tmp/faust
 - pushd  /tmp/faust
-- make
+- make PREFIX=$HOME/local
 - sudo make install
 - popd
 
@@ -34,7 +35,7 @@ before_script:
 - git clone https://github.com/cth103/plugin-torture.git /tmp/plugin-torture
 - pushd /tmp/plugin-torture
 - make
-- sudo cp plugin-torture /usr/local/bin/
+- cp plugin-torture $HOME/local/
 - popd
 
 # # install lv2bm from git
@@ -42,9 +43,11 @@ before_script:
 - wget https://github.com/moddevices/caps-lv2/raw/master/.create_lv2_env.sh
 - bash .create_lv2_env.sh
 - git clone https://github.com/moddevices/lv2bm
-- cd lv2bm && make && sudo make PREFIX=/usr/local install && cd ..
+- cd lv2bm && make && sudo make PREFIX=$HOME/local install && cd ..
+
 
 script:
+- sudo cp -r $HOME/local/ /usr/local/
 - faust -v
 
 # - faust CharacterCompressor.dsp
