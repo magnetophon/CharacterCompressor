@@ -56,7 +56,7 @@ script:
 # # build lv2
 - echo "building lv2"
 - time faust2lv2  -t 9999999 -time CharacterCompressor.dsp
-- cp -r CharacterCompressor.lv2/ ~/.lv2/
+- cp -r CharacterCompressor.lv2 ~/.lv2/
 
 # # build ladspa
 - echo "building ladspa"
@@ -69,6 +69,7 @@ script:
 
 
 - lv2bm `lv2ls`
+# - lv2bm --full-test `lv2ls`
 
 # - plugin-torture --evil -d --lv2 --plugin $plugins/manifest.ttl | tee >(>> $DIR/lv2-evil.txt) | grep 'WARNING'
 
