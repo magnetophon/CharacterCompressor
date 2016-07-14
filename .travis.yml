@@ -47,7 +47,9 @@ install:
 
 
 script:
-- sudo cp -r $HOME/local/ /usr/local/
+- sudo rsync -avzh $HOME/local/ /usr/local/
+# - sudo cp -r $HOME/local/bin/ /usr/local/bin/
+# - sudo cp -r $HOME/local/ /usr/local/
 - faust -v
 
 # - faust CharacterCompressor.dsp
