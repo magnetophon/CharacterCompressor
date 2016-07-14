@@ -9,19 +9,21 @@ before_script:
 # - ./waf configure
 # - ./waf build
 # - sudo ./waf install
+
 - sudo apt-get build-dep -yy faust
+
 - sudo apt-get install -yy  libboost-all-dev ladspa-sdk liblilv-dev lv2-dev libserd-dev libsord-dev libsratom-dev
 # - sudo apt-get install ladspa-sdk
 - git clone https://github.com/cth103/plugin-torture.git /tmp/plugin-torture
 - pushd /tmp/plugin-torture
 - make
-- sudo make install
+# - sudo make install
+- cp plugin-torture /usr/bin/
 - popd
 - git clone git://git.code.sf.net/p/faudiostream/code /tmp/faust
 - pushd  /tmp/faust
 - make
-# - sudo make install
-- cp plugin-torture /usr/bin/
+- sudo make install
 - popd
 script:
 - faust -v
