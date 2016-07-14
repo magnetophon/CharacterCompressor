@@ -17,8 +17,8 @@ install:
       sudo apt-get build-dep -yy faust
       git clone git://git.code.sf.net/p/faudiostream/code /tmp/faust
       pushd  /tmp/faust
-      make PREFIX=$HOME/local
-      sudo make install
+      make
+      sudo make PREFIX=$HOME/local install
       popd
       echo "install plugin-torture"
       sudo apt-get install -yy  libboost-all-dev ladspa-sdk liblilv-dev lv2-dev libserd-dev libsord-dev libsratom-dev
