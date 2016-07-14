@@ -8,21 +8,21 @@ dist: trusty
 #   - /usr/bin
 
 install:
-  # build either the dependencies (1) and cache them, or the dsp (0)
-  - export BUILD_DEPS=1
+# build either the dependencies (1) and cache them, or the dsp (0)
+- export BUILD_DEPS=1
 
-  - if [ $BUILD_DEPS == 1 ];
-    then
-      sudo apt-get -qq update
-      mkdir -p $HOME/local/{bin,include,lib,share}
+- if [ $BUILD_DEPS == 1 ];
+  then
+    sudo apt-get -qq update
+    mkdir -p $HOME/local/{bin,include,lib,share}
 # # install faust from git
-      echo "install faust"
-      sudo apt-get build-dep -yy faust
-      git clone git://git.code.sf.net/p/faudiostream/code /tmp/faust
-      pushd  /tmp/faust
-      make PREFIX=$HOME/local
-      sudo make install
-      popd
+    echo "install faust"
+    sudo apt-get build-dep -yy faust
+    git clone git://git.code.sf.net/p/faudiostream/code /tmp/faust
+    pushd  /tmp/faust
+    make PREFIX=$HOME/local
+    sudo make install
+    popd
 
 # # install jackd2 from git
 #     echo "install jackd2"
@@ -34,69 +34,69 @@ install:
 #     sudo ./waf install
 
 # # install plugin-torture from git
-      echo "install plugin-torture"
-      sudo apt-get install -yy  libboost-all-dev ladspa-sdk liblilv-dev lv2-dev libserd-dev libsord-dev libsratom-dev
-      git clone https://github.com/cth103/plugin-torture.git /tmp/plugin-torture
-      pushd /tmp/plugin-torture
-      make
-      cp plugin-torture $HOME/local/bin/
-      popd
+    echo "install plugin-torture"
+    sudo apt-get install -yy  libboost-all-dev ladspa-sdk liblilv-dev lv2-dev libserd-dev libsord-dev libsratom-dev
+    git clone https://github.com/cth103/plugin-torture.git /tmp/plugin-torture
+    pushd /tmp/plugin-torture
+    make
+    cp plugin-torture $HOME/local/bin/
+    popd
 
 # # install lv2bm from git
-      echo "install lv2bm"
-      wget https://github.com/moddevices/caps-lv2/raw/master/.create_lv2_env.sh
-      bash .create_lv2_env.sh
-      git clone https://github.com/moddevices/lv2bm
-      cd lv2bm && make && sudo make PREFIX=$HOME/local install && cd ..
+    echo "install lv2bm"
+    wget https://github.com/moddevices/caps-lv2/raw/master/.create_lv2_env.sh
+    bash .create_lv2_env.sh
+    git clone https://github.com/moddevices/lv2bm
+    cd lv2bm && make && sudo make PREFIX=$HOME/local install && cd ..
 
-    else
-      sudo rsync -avzh $HOME/local/ /usr/local/
-    fi
+  else
+    sudo rsync -avzh $HOME/local/ /usr/local/
+  fi
 
 script:
-  # - sudo cp -r $HOME/local/bin/ /usr/local/bin/
-  # - sudo cp -r $HOME/local/ /usr/local/
-  - faust -v
+# - sudo cp -r $HOME/local/bin/ /usr/local/bin/
+# - sudo cp -r $HOME/local/ /usr/local/
+- faust -v
 
-  - if [ $BUILD_DEPS == 0 ];
-    then
-  #    faust CharacterCompressor.dsp
+- if [ $BUILD_DEPS == 0 ];
+  then
+#    faust CharacterCompressor.dsp
 
-  # # build jack console application
-  #     echo "building jack console application"
-  #     time faust2jackconsole  -t 9999999 -time -osc CharacterCompressor.dsp
+# # build jack console application
+#     echo "building jack console application"
+#     time faust2jackconsole  -t 9999999 -time -osc CharacterCompressor.dsp
 
-  # # build lv2
-      echo "building lv2"
-      time faust2lv2  -t 9999999 -time CharacterCompressor.dsp
-      mkdir $HOME/.lv2
-      cp -r CharacterCompressor.lv2 $HOME/.lv2/
+# # build lv2
+    echo "building lv2"
+    time faust2lv2  -t 9999999 -time CharacterCompressor.dsp
+    mkdir $HOME/.lv2
+    cp -r CharacterCompressor.lv2 $HOME/.lv2/
 
-  # # build ladspa
-      echo "building ladspa"
-      time faust2ladspa  -t 9999999 -time CharacterCompressor.dsp
+# # build ladspa
+    echo "building ladspa"
+    time faust2ladspa  -t 9999999 -time CharacterCompressor.dsp
 
-      echo "starting tests"
-  #   jackd -vr -d dummy &
-  #   sleep 3
-  #   timeout 10 ./CharacterCompressor
+    echo "starting tests"
+#   jackd -vr -d dummy &
+#   sleep 3
+#   timeout 10 ./CharacterCompressor
 
 
-      lv2bm `lv2ls`
-  #   lv2bm --full-test `lv2ls`
+    lv2bm `lv2ls`
+#   lv2bm --full-test `lv2ls`
 
-  #   plugin-torture --evil -d --lv2 --plugin $plugins/manifest.ttl
+#   plugin-torture --evil -d --lv2 --plugin $plugins/manifest.ttl
 
-      plugin-torture --evil -d --ladspa --plugin CharacterCompressor.so
-    fi
+    plugin-torture --evil -d --ladspa --plugin CharacterCompressor.so
+  fi
 
 after_success:
-  - echo "Success!"
-  - find /usr/local
+- echo "Success!"
+- find /usr/local
 
 after_failure:
-  - echo "Something went wrong..."
-  - find /usr/local
+- echo "Something went wrong..."
+- find /usr/local
 
 notifications:
   email:
