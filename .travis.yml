@@ -59,7 +59,8 @@ script:
 # # build lv2
 - echo "building lv2"
 - time faust2lv2  -t 9999999 -time CharacterCompressor.dsp
-- cp -r CharacterCompressor.lv2 ~/.lv2/
+- mkdir $HOME/.lv2
+- cp -r CharacterCompressor.lv2 $HOME/.lv2/
 
 # # build ladspa
 - echo "building ladspa"
