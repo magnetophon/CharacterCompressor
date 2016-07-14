@@ -20,7 +20,8 @@ before_script:
 - git clone git://git.code.sf.net/p/faudiostream/code /tmp/faust
 - pushd  /tmp/faust
 - make
-- sudo make install
+# - sudo make install
+- cp plugin-torture /usr/bin/
 - popd
 script:
 - faust -v
