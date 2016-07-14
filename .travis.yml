@@ -9,7 +9,8 @@ before_script:
 # - ./waf configure
 # - ./waf build
 # - sudo ./waf install
-- sudo apt-get install ladspa-sdk
+- sudo apt-get build-dep faust
+# - sudo apt-get install ladspa-sdk
 - git clone https://github.com/cth103/plugin-torture.git /tmp/plugin-torture
 - pushd /tmp/plugin-torture
 - make
