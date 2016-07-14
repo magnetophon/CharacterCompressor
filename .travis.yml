@@ -34,7 +34,7 @@ before_script:
 - git clone https://github.com/cth103/plugin-torture.git /tmp/plugin-torture
 - pushd /tmp/plugin-torture
 - make
-- sudo cp plugin-torture /usr/bin/
+- sudo cp plugin-torture /usr/local/bin/
 - popd
 
 # # install lv2bm from git
@@ -42,7 +42,7 @@ before_script:
 - wget https://github.com/moddevices/caps-lv2/raw/master/.create_lv2_env.sh
 - bash .create_lv2_env.sh
 - git clone https://github.com/moddevices/lv2bm
-- cd lv2bm && make && sudo make PREFIX=/usr install && cd ..
+- cd lv2bm && make && sudo make PREFIX=/usr/local install && cd ..
 
 script:
 - faust -v
@@ -75,15 +75,15 @@ script:
 
 - plugin-torture --evil -d --ladspa --plugin CharacterCompressor.so
 
-- which faust
-- which lv2bm
-- which plugin-torture
 
 after_success:
 - echo "Success!"
+- find /usr/local
 
 after_failure:
 - echo "Something went wrong..."
+- find /usr/local
+
 notifications:
   email:
     on_success: never
