@@ -2,6 +2,11 @@
 language: generic
 sudo: required
 dist: trusty
+
+# cache:
+#   directories:
+#   - /usr/bin
+
 before_script:
 - sudo apt-get -qq update
 
@@ -29,7 +34,6 @@ before_script:
 - git clone https://github.com/cth103/plugin-torture.git /tmp/plugin-torture
 - pushd /tmp/plugin-torture
 - make
-# - sudo make install
 - sudo cp plugin-torture /usr/bin/
 - popd
 
@@ -46,8 +50,8 @@ script:
 # - faust CharacterCompressor.dsp
 
 # # build jack console application
-- echo "building jack console application"
-- time faust2jackconsole  -t 9999999 -time -osc CharacterCompressor.dsp
+# - echo "building jack console application"
+# - time faust2jackconsole  -t 9999999 -time -osc CharacterCompressor.dsp
 
 # # build lv2
 - echo "building lv2"
@@ -61,6 +65,7 @@ script:
 
 - echo "starting tests"
 # - jackd -vr -d dummy &
+# - sleep 3
 # - timeout 10 ./CharacterCompressor
 
 
