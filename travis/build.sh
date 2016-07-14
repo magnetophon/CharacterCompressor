@@ -10,7 +10,7 @@ then
     echo "building ladspa"
     time faust2ladspa  -t 9999999 -time CharacterCompressor.dsp
     echo "starting tests"
-    lv2bm `lv2ls`
+    lv2bm --full-test `lv2ls`
     plugin-torture --evil -d --ladspa --plugin CharacterCompressor.so
 else
     exit 0
