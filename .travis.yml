@@ -75,6 +75,10 @@ script:
 
 - plugin-torture --evil -d --ladspa --plugin CharacterCompressor.so
 
+- which faust
+- which lv2bm
+- which plugin-torture
+
 after_success:
 - echo "Success!"
 
