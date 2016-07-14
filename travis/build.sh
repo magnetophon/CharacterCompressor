@@ -2,6 +2,7 @@
 
 if [ $BUILD_DEPS == 0 ];
 then
+    faust -v
     echo "building lv2"
     time faust2lv2  -t 9999999 -time CharacterCompressor.dsp
     mkdir $HOME/.lv2

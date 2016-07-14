@@ -12,7 +12,6 @@ install:
   - bash travis/install_deps.sh
 
 script:
-  - faust -v
   - bash travis/build.sh
 
 after_success:
