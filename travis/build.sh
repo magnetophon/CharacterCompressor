@@ -1,17 +1,34 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-if [ $BUILD_DEPS == 0 ];
+DSPs=(
+    CharacterCompressor
+    CharacterCompressorMono
+)
+
+function buildPlugins {
+    echo "building lv2 $1"
+    time bash -x faust2lv2 -vec  -t 9999999 -time "$1.dsp"
+    cp -r "$1.lv2" "$HOME/.lv2/"
+    echo "building ladspa $1"
+    time bash -x faust2ladspa -vec  -t 9999999 -time "$1.dsp"
+}
+
+if [[ $BUILD_DEPS == 0 ]];
 then
     faust -v
-    echo "building lv2"
-    time faust2lv2  -t 9999999 -time CharacterCompressor.dsp
-    mkdir $HOME/.lv2
-    cp -r CharacterCompressor.lv2 $HOME/.lv2/
-    echo "building ladspa"
-    time faust2ladspa  -t 9999999 -time CharacterCompressor.dsp
-    echo "starting tests"
-    lv2bm `lv2ls`
-    plugin-torture --evil -d --ladspa --plugin CharacterCompressor.so
+
+    mkdir -p "$HOME/.lv2"
+    for i in "${DSPs[@]}"
+    do
+        buildPlugins "$i"
+    done
+    echo "benchmark all LV2s"
+    lv2bm "$(lv2ls)"
+    echo "torture ladspas"
+    for i in "${DSPs[@]}"
+    do
+        plugin-torture --evil -d --ladspa --plugin "$i.so"
+    done
 else
     exit 0
 fi
