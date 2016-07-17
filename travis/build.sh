@@ -23,7 +23,7 @@ then
         buildPlugins "$i"
     done
     echo "benchmark all LV2s"
-    lv2bm "$(lv2ls)"
+    lv2bm `lv2ls | grep CharacterCompressor`
     echo "torture ladspas"
     for i in "${DSPs[@]}"
     do
