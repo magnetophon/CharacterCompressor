@@ -16,6 +16,7 @@ function buildPlugins {
 if [[ $BUILD_DEPS == 0 ]];
 then
     faust -v
+    export LV2_PATH="$HOME/.lv2/"
 
     mkdir -p "$HOME/.lv2"
     for i in "${DSPs[@]}"
