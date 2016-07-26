@@ -31,7 +31,7 @@ then
     echo "torture ladspas"
     for i in "${DSPs[@]}"
     do
-        plugin-torture --evil -d --lv2 --plugin "$i.lv2/manifest.ttl"
+        plugin-torture --evil -d --lv2 --plugin "$HOME/.lv2/$i.lv2/manifest.ttl"
         # plugin-torture --evil -d --ladspa --plugin "$i.so"
     done
 else
