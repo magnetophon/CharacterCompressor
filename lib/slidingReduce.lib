@@ -14,7 +14,7 @@
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public
- 	License along with the GNU C Library; if not, write to the Free
+ 	License along with the GNU C Library; ba.if not, write to the Free
   	Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
   	02111-1307 USA.
  ************************************************************************
@@ -26,7 +26,6 @@ declare copyright "Bart Brouns";
 declare version "0.1";
 declare license "LGPL";
 
-
 //---------------------------------------------------------------
 // Provides various operations on the last N samples
 // using a high order 'slidingReduce(N,maxN,op,disabledVal,x)' fold-like function :
@@ -37,8 +36,6 @@ declare license "LGPL";
 //   slidingMeanN(n,maxn) : the sliding mean of the last n input samples
 //   slidingRMSn(n,maxn)  : the sliding RMS of the last n input samples
 //---------------------------------------------------------------
-
-
 
 //---------------------------------------------------------------
 // slidingReduce(N,maxN,op,disabledVal,x)
@@ -60,8 +57,8 @@ declare license "LGPL";
 // For example:
 // +(x,0) equals x
 // min(x,INFINITY) equals x
-// So if we want to calculate the sum, we need to give 0 as disabledVal,
-// and if we want the minimum, we need to give INFINITY as disabledVal
+// So ba.if we want to calculate the sum, we need to give 0 as disabledVal,
+// and ba.if we want the minimum, we need to give INFINITY as disabledVal
 
 slidingReduce(N,maxN,op,disabledVal,x) =
 par(i,maxNrBits,fixedDelayOp(1<<i,x)@sumOfPrevDelays(N,maxN,i) :useVal(i)):combine(maxNrBits) with {
@@ -72,8 +69,8 @@ par(i,maxNrBits,fixedDelayOp(1<<i,x)@sumOfPrevDelays(N,maxN,i) :useVal(i)):combi
   };
   // The sum of all the delays that are applied to the previous blocks
   sumOfPrevDelays(N,maxN,0) = 0;
-  sumOfPrevDelays(N,maxN,i) = (subseq((allDelays(N,maxN)),0,i):>_) with {
-    allDelays(N,maxN) = par(j, maxNrBits, (1<<j) *  take(j+1,(int2bin(N,maxN))) );
+  sumOfPrevDelays(N,maxN,i) = (ba.subseq((allDelays(N,maxN)),0,i):>_) with {
+    allDelays(N,maxN) = par(j, maxNrBits, (1<<j) *  ba.take(j+1,(int2bin(N,maxN))) );
   };
   maxNrBits = int2nrOfBits(maxN);
   // Apply <op> to <N> parallel inputsignals
@@ -85,11 +82,11 @@ par(i,maxNrBits,fixedDelayOp(1<<i,x)@sumOfPrevDelays(N,maxN,i) :useVal(i)):combi
   // 'works' in this case means 'does the same as reduce
   useVal(i) =
     _<:select2((i==0) & (N==0) ,
-      select2( take(i+1,(int2bin(N,maxN))) , disabledVal,_),
+      select2( ba.take(i+1,(int2bin(N,maxN))) , disabledVal,_),
       _
     );
   // useVal(i) =
-  //     select2( take(i+1,(int2bin(N,maxN))) , disabledVal,_);
+  //     select2( ba.take(i+1,(int2bin(N,maxN))) , disabledVal,_);
 };
 
 newSlidingReduce(N,maxN,op,disabledVal,x) =
@@ -103,8 +100,8 @@ with {
   };
   // The sum of all the delays that are applied to the previous blocks
   sumOfPrevDelays(N,maxN,0) = 0;
-  sumOfPrevDelays(N,maxN,i) = (subseq((allDelays(N,maxN)),0,i):>_) with {
-    allDelays(N,maxN) = par(j, maxNrBits, (1<<j) *  take(j+1,(int2bin(N,maxN))) );
+  sumOfPrevDelays(N,maxN,i) = (ba.subseq((allDelays(N,maxN)),0,i):>_) with {
+    allDelays(N,maxN) = par(j, maxNrBits, (1<<j) *  ba.take(j+1,(int2bin(N,maxN))) );
   };
   maxNrBits = int2nrOfBits(maxN);
   // Apply <op> to <N> parallel inputsignals
@@ -118,7 +115,7 @@ with {
   nrOfUsedBits(i,n) = par(j,int2nrOfBits(n),isUsed(i,j)):>_;
 
   switched_combine(i,n) =
-    bus(int2nrOfBits(n))<:
+    si.bus(int2nrOfBits(n))<:
       par(j,n,
         par(k,int2nrOfBits(n),S(isUsed(j+1,k))):combine(nrOfUsedBits(j+1,n))
       )
@@ -135,7 +132,6 @@ int2bin(N,maxN) = par(i,int2nrOfBits(maxN),int(floor(N/(1<<i)))%2);
 int2nrOfBits(0) = 0;
 int2nrOfBits(maxN) = int(floor(log(maxN)/log(2))+1);
 
-
 // slidingSumN(n,maxn) : the sliding sum of the last n input samples
 slidingSumN(n,maxn) = slidingReduce(n,maxn,+,0);
 
@@ -151,17 +147,15 @@ slidingMeanN(n,maxn) = slidingSumN(n,maxn)/n;
 // slidingRMSn(n,maxn)  : the sliding RMS of the last n input samples
 slidingRMSn(n,maxn) = pow(2):slidingMeanN(n,maxn) : sqrt;
 
-
-
 // maybe useful for math.lib:
 
 INFINITY = fconstant(float INFINITY, <math.h>);
 
-// bug in subseq?:
+// bug in ba.subseq?:
 // no elements is undefined.
 // proposed solution:
-// subseq((head, tail), 0, 0)      = !;
-// subseq((head, tail), 0, 1)      = head;
-// subseq((head, tail), 0, n)      = head, subseq(tail, 0, n-1);
-// subseq((head, tail), p, n)      = subseq(tail, p-1, n);
-// subseq(head, 0, n)              = head;
+// ba.subseq((head, tail), 0, 0)      = !;
+// ba.subseq((head, tail), 0, 1)      = head;
+// ba.subseq((head, tail), 0, n)      = head, ba.subseq(tail, 0, n-1);
+// ba.subseq((head, tail), p, n)      = ba.subseq(tail, p-1, n);
+// ba.subseq(head, 0, n)              = head;

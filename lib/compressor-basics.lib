@@ -23,7 +23,6 @@ COEFF2DB(x) = log10(x) * 20;
 //DB2COEFF(x) = select2( (x < -318.8) , pow(10, x / 20), 0);
 DB2COEFF(x) = pow(10, x / 20);
 
-
 // apply a threshold to the value and then normalize it to 0
 THRESH(t,x) = (x-t) * (t < x);
 
@@ -36,7 +35,6 @@ SMOOTH(a, r, prevx, x) =
 //		COEFF2DB :
 //		THRESH(threshold) :
 //		SMOOTH(attack, release) ~ _ );
-
 
 DETECTOR = (	COEFF2DB :
 		THRESH(threshold) :
@@ -58,7 +56,7 @@ RATIO(x) = 0 - (x - (x/ratio));
 /**
  * Time ratio (tr) to real time (t):
  *
- *   tr = exp(1) / ( t * SR * time_ratio_target )
+ *   tr = exp(1) / ( t * ma.SR * time_ratio_target )
  *
  * The ratio system never comes up to the 'target value'.
  * Assuming previous signal level 0.0 and target signal level 1.0
@@ -83,13 +81,12 @@ time_ratio_target_atk = 8.0;
 //time_ratio_target_rel = 4.0; // this could be too slow
 time_ratio_target_rel = 1.5;
 
-time_ratio_attack(t) = exp(1) / ( t * SR * time_ratio_target_atk );
-time_ratio_release(t) = exp(1) / ( t * SR * time_ratio_target_rel );
-
+time_ratio_attack(t) = exp(1) / ( t * ma.SR * time_ratio_target_atk );
+time_ratio_release(t) = exp(1) / ( t * ma.SR * time_ratio_target_rel );
 
 // RMS at 0.5 ms. It should allow for a smoother peak style compression
 // min(max()) games due to buffer allocation. faust has to know how large this can become.
-/*rms_speed        = 0.0005 * min(192000.0, max(22050.0, SR));*/
+/*rms_speed        = 0.0005 * min(192000.0, max(22050.0, ma.SR));*/
 
 /*threshold	 = hslider("threshold (dB)",         -10.0,  -60.0,   10.0, 1.0);*/
 /*attack		 = time_ratio_attack( hslider("attack (ms)", 10.0,    0.001,  400.0, 0.001) / 1000 );*/
@@ -113,15 +110,12 @@ makeup_gain = 0;
 drywet      = 1.0;
 */
 
-
 DRYWET(ratio) = ( *(1 - ratio),  * (ratio)) : +;
 DRYWET_STEREO(l, r, ratio) = ( (DRYWET(l, ratio)), (DRYWET(r, ratio)));
 
-
-
-//maximum_rate = 10.0/SR;
-//maximum_rate = 96.0/SR;
-//maximum_rate = 512.0/SR;
+//maximum_rate = 10.0/ma.SR;
+//maximum_rate = 96.0/ma.SR;
+//maximum_rate = 512.0/ma.SR;
 
 RATELIMITER_INTERNAL(maximum_rate,pt, ct, prevx, x) =
      select2( abs(ct-pt) > maximum_rate, x,
@@ -137,9 +131,6 @@ OVERSHOOT_CORRECTION(limited_gain, target_gain, tangent) =
 RATELIMITER(maximum_rate,prevx, x) =
 	( RATELIMITER_INTERNAL( prevx@1 - prevx, prevx - x, prevx, x,maximum_rate), x, (prevx - x) ) :
 	  OVERSHOOT_CORRECTION;
-
-
-
 
 /*
 

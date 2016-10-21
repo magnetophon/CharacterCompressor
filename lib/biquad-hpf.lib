@@ -15,15 +15,15 @@
 /* Filter math adapted from swh-plugins by Steve Harris who in turn
    credits Eli Brandt */
 
-//import("math.lib");
+//import("stdfaust.lib");
 
 M_LN2 = 0.69314718055994530942;
 
 biquad_basics_alpha(bw, omega, sn, cs) =
-	(omega, sn, cs, sn * sinh( M_LN2 / 2.0 * bw * omega / sn) );
+	(omega, sn, cs, sn * ma.sinh( M_LN2 / 2.0 * bw * omega / sn) );
 
 biquad_basics(samplerate, bw, cutoff) =
-	(2.0 * PI * cutoff / samplerate)
+	(2.0 * ma.PI * cutoff / samplerate)
 	<: ( _ <: (_, sin) , cos) // omega, sn, cs
 	: biquad_basics_alpha(bw);
 
@@ -37,7 +37,6 @@ biquad_hp_params_coeffs(omega, sn, cs, alpha, a0r) =
 	, a0r * ( 2.0 * cs )        // a1
 	, a0r * (alpha - 1.0) );    // a2
 
-
 // bw = "octaves per 6dB attenuation, I think" (swh Sep 28 2009)
 biquad_hp_params(samplerate, bw, cutoff) =
 	  biquad_basics(samplerate, bw, cutoff)
@@ -49,8 +48,7 @@ biquad_run(y, b0, b1, b2, a1, a2, x) =
 	(b0 * x@0) + (b1 * x@1) + (b2 * x@2) +
 	             (a1 * y@0) + (a2 * y@1);
 
-
-biquad_hp(cutoff,x) = (biquad_hp_params(SR, 3.0, cutoff), x) : biquad_run ~ _;
+biquad_hp(cutoff,x) = (biquad_hp_params(ma.SR, 3.0, cutoff), x) : biquad_run ~ _;
 
 //hpf_switch = select2( hslider("sidechain hpf", 0, 0, 1, 1), 1.0, 0.0);
 

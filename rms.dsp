@@ -8,9 +8,8 @@ RMS(size) = power_of_two : integrate(size) : sqrt
 	//	select2(size > 0, 0, delaysum(size-1, x));
  };
 
-
-/*RMS(n) = square : mean(n) : sqrt */
+/*RMS(n) = os.square : mean(n) : sqrt */
 /*with {*/
 	/*mean(n,x) = x - x @ n : + ~ _ : /(n);*/
-	/*square(x) = x * x;*/
+	/*os.square(x) = x * x;*/
 /*};*/
