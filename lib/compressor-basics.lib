@@ -37,9 +37,17 @@ SMOOTH(a, r, prevx, x) =
 //		SMOOTH(attack, release) ~ _ );
 
 DETECTOR = (	COEFF2DB :
-		THRESH(threshold) :
+		        THRESH(threshold) :
 		SMOOTH(attack, release) ~ _ );
 
+DETECTOR_new(x)  = gain_computer(1,threshold,knee,x:ba.linear2db) ;
+
+gain_computer(strength,thresh,knee,level) =
+  select3((level>(thresh-(knee/2)))+(level>(thresh+(knee/2))),
+          0,
+          ((level-thresh+(knee/2)):pow(2)/(2*knee)) ,
+          (level-thresh)
+                            ) : max(0)*-strength;
 RATIO(x) = 0 - (x - (x/ratio));
 
 /**
@@ -118,19 +126,19 @@ DRYWET_STEREO(l, r, ratio) = ( (DRYWET(l, ratio)), (DRYWET(r, ratio)));
 //maximum_rate = 512.0/ma.SR;
 
 RATELIMITER_INTERNAL(maximum_rate,pt, ct, prevx, x) =
-     select2( abs(ct-pt) > maximum_rate, x,
-              prevx - pt + maximum_rate * select2( (x < prevx), 1.0, -1.0) );
+  select2( abs(ct-pt) > maximum_rate, x,
+           prevx - pt + maximum_rate * select2( (x < prevx), 1.0, -1.0) );
 
 // this corrects for overshooting caused by rate limiting.
 // in effect it should eliminate gain oscillation due to this overhsoot
 OVERSHOOT_CORRECTION(limited_gain, target_gain, tangent) =
-	select2( (tangent > 0.0),
-		 select2( (limited_gain > target_gain), limited_gain, target_gain),
-		 select2( (limited_gain > target_gain), target_gain, limited_gain));
+  select2( (tangent > 0.0),
+		   select2( (limited_gain > target_gain), limited_gain, target_gain),
+		   select2( (limited_gain > target_gain), target_gain, limited_gain));
 
 RATELIMITER(maximum_rate,prevx, x) =
-	( RATELIMITER_INTERNAL( prevx@1 - prevx, prevx - x, prevx, x,maximum_rate), x, (prevx - x) ) :
-	  OVERSHOOT_CORRECTION;
+  ( RATELIMITER_INTERNAL( prevx@1 - prevx, prevx - x, prevx, x,maximum_rate), x, (prevx - x) ) :
+  OVERSHOOT_CORRECTION;
 
 /*
 
