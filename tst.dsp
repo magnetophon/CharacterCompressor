@@ -9,24 +9,56 @@ import("stdfaust.lib");
 maxN = 2;
 // maxN = 28;
 INF = 99999;
-//maxMedianNr = pow(3,3):int;
-maxMedianNr = 7;
-maxMedianNr5 = 25;
-maxMeanNr = pow(2,int2nrOfBits(maxMedianNr)) ;
+// maxMedianNr = 27;
+// maxMedianNr5 = 25;
+// maxMedianNr = pow(3,4):int;
+// maxMedianNr5 = pow(5,3):int;
+maxMedianNr = pow(3,6):int;
+maxMedianNr5 = pow(5,4):int;
+// maxMedianNr = pow(3,7):int;
+// maxMedianNr5 = pow(5,5):int;
+// maxMedianNr = pow(3,9):int;
+// maxMedianNr5 = pow(5,6):int;
+// maxMedianNr = pow(3,10):int;
+// maxMedianNr5 = pow(5,7):int; // fills up 8G RAM + 8G swap
+
+// maxMedianNr = pow(3,12):int;
+
+slidingMultp(n,maxn,x) = ba.slidingReduce(*,n,maxn,1,x);
+slidingMult(n,maxn,x)  = * ~ _ <: _, _@int(max(0,n)) :> /;
+slidingGeometricMean(n,maxn,x) = pow(slidingMult(n,maxn,x),1.0/n);
+
+// maxMeanNr = pow(2,int2nrOfBits(maxMedianNr)) ;
+maxMeanNr = pow(2,4):int;
 //maxMedianNr = 177147;
 //maxMedianNr = pow(3,3);
 process =
+  // slidingGeometricMean(hslider("Geometric mean", 1, 1, maxMeanNr,1),maxMeanNr);
   //int(pow(3,ceil(log(80)/log(3)))/3);
   compare;
+// signal:
+// fixedDelayMedianOfMedians(maxMedianNr)
+// fixedDelayMedianOfMedians5(maxMedianNr5)
+// :meter3;
+// Median5;
+// ba.selectn(5,hslider("sel", 0, 0, 4, 1):int);
+// selectIfromN(hslider("sel", 0, 0, 4, 1):int,5);
+selectIfromN(i,n) = par(j, n, _*(i==j)):>_;
 compare =
-        signal<:
-        (slidingMedianOfMedians(maxMedianNr):meter1)
-       ,(ba.slidingMeanN(maxMedianNr,maxMeanNr):meter2)
+  signal<:
+  (ba.slidingMeanN(maxMedianNr,maxMeanNr):meter1)
+// ,(fixedDelayMedianOfMedians(maxMedianNr):meter2)
+// ,(fixedDelayMedianOfMedians5(maxMedianNr5):meter3)
+// ,((_*100:ba.slidingMeanN(maxMedianNr,maxMeanNr)/100):meter3)
+ ,(slidingGeometricMean(maxMedianNr,maxMeanNr) :meter3)
+ ,(slidingMult(maxMedianNr,maxMeanNr) :meter2)
+// ,(((_+1)*100:slidingGeometricMean(maxMedianNr,maxMeanNr)-1)/100 :meter3)
 ;
 
 signal = no.noise*hslider("noise level", 0, 0, 1, 0.01)+hslider("DC", 0, -1, 1, 0.01)+(hslider("osc level", 0, 0, 1, 0.01)*os.osc(hslider("freq", 110, 1, 440, 1)));
-meter1 = (_<:(_, ((vbargraph("Median3", -1, 1)))):attach);
-meter2 = (_<:(_, ((vbargraph("Mean", -1, 1)))):attach);
+meter1 = (_<:(_, ((vbargraph("Mean", -1, 1)))):attach);
+meter2 = (_<:(_, ((vbargraph("Median3", -1, 1)))):attach);
+meter3 = (_<:(_, ((vbargraph("Median5", -1, 1)))):attach);
 
 
 // my_slidingReduce(min,n,pow(2,maxN),INF);
@@ -47,19 +79,23 @@ n= hslider("n", 1, 1, pow(2,maxN), 1):int;
 // os.osc(440),_*hslider("gain", 1, 0, 1, 0.001);
 
 
-slidingMedianOfMedians =
+fixedDelayMedianOfMedians =
   case {
     (1,x) => x;
     (2,x) => (x+x')/2;  // hey, it's better than picking one!
+    (4,x) =>
+// take the mean of the middle two:
+(ba.slidingSumN(4,4,x)-ba.slidingMaxN(4,4,x)-ba.slidingMinN(4,4,x))/2;
+    (5,x) => fixedDelayMedianOfMedians5(5,x);
     (n,x) =>
-(slidingMedianOfMedians(groupsize,x), slidingMedianOfMedians(groupsize,x)@groupsize, slidingMedianOfMedians(n-(2*groupsize),x)@(groupsize*2))
-//(slidingMedianOfMedians(groupsizeB,x), slidingMedianOfMedians(groupsizeS,x)@groupsizeB, slidingMedianOfMedians(n-(groupsizeB+groupsizeS),x)@(groupsizeB+groupsizeS))
-    : MedianOfMedians3 with {
+(fixedDelayMedianOfMedians(groupsize,x), fixedDelayMedianOfMedians(groupsize,x)@groupsize, fixedDelayMedianOfMedians(n-(2*groupsize),x)@(groupsize*2))
+// (fixedDelayMedianOfMedians(groupsizeB,x), fixedDelayMedianOfMedians(groupsizeS,x)@groupsizeB, fixedDelayMedianOfMedians(n-(groupsizeB+groupsizeS),x)@(groupsizeB+groupsizeS))
+    : Median3  with {
       //groupsize = int(n/3);
       groupsize = int(pow(3,floor(log(n)/log(3)))/3);
-      //groupsizeB = int(pow(3,ceil(log(n)/log(3)))/3);
-      //groupsizeS = int(pow(3,floor(log(n)/log(3)))/3);
-      MedianOfMedians3(x0,x1,x2) =
+      groupsizeB = int(pow(3,ceil(log(n)/log(3)))/3);
+      groupsizeS = int(pow(3,floor(log(n)/log(3)))/3);
+      Median3 (x0,x1,x2) =
         select3(sell,x0,x1,x2) with {
         sell =
           (  ( ((x1>=x0) & (x1<=x2)) | ((x1>=x2) & (x1<=x0))))
@@ -68,23 +104,61 @@ slidingMedianOfMedians =
     };
   };
 
-slidingMedianOfMedians5 =
+fixedDelayMedianOfMedians5 =
   case {
     (1,x) => x;
     (2,x) => (x+x')/2;  // hey, it's better than picking one!
+    (3,x) => fixedDelayMedianOfMedians(3,x);
+    (4,x) =>
+// take the mean of the middle two:
+(ba.slidingSumN(4,4,x)-ba.slidingMaxN(4,4,x)-ba.slidingMinN(4,4,x))/2;
+    (9,x) => fixedDelayMedianOfMedians(9,x);
+    (10,x) => fixedDelayMedianOfMedians(10,x);
+    (12,x) => fixedDelayMedianOfMedians(12,x);
     (n,x) =>
-(slidingMedianOfMedians5(n/3,x), slidingMedianOfMedians5(n/3,x)@(n/3), slidingMedianOfMedians5(n/3,x)@(n/3*2))
-    : MedianOfMedians3 with {
-      MedianOfMedians3(x0,x1,x2) =
-        select3(sell,x0,x1,x2) with {
-      sell =
-        (  ( ((x1>=x0) & (x1<=x2)) | ((x1>=x2) & (x1<=x0))))
-+       (2*( ((x2> x1) & (x2< x0)) | ((x2> x0) & (x2< x1)))) ;
+(par(i, 4, fixedDelayMedianOfMedians5(groupsize,x)@(groupsize*i) ), fixedDelayMedianOfMedians5(n-(4*groupsize),x)@(4*groupsize))
+    : Median5 with {
+      groupsize = int(pow(5,int(log(n)/log(5)))/5);
+      Median5(x0,x1,x2,x3,x4) =
+        (x0,x1,x2,x3,x4) : selectIfromN(sel,5) with {
+        sel =
+          (1*(
+              ((x1>=x0) & (x1>=x2) & (x1<=x3) & (x1<=x4))  |
+                ((x1>=x0) & (x1>=x3) & (x1<=x2) & (x1<=x4))  |
+                ((x1>=x0) & (x1>=x4) & (x1<=x3) & (x1<=x2))  |
+                ((x1>=x2) & (x1>=x3) & (x1<=x0) & (x1<=x4))  |
+                ((x1>=x2) & (x1>=x4) & (x1<=x0) & (x1<=x3))  |
+                ((x1>=x3) & (x1>=x4) & (x1<=x0) & (x1<=x2))
+          ))
++         (2*(
+              ((x2> x0) & (x2> x1) & (x2< x3) & (x2< x4))  |
+                ((x2> x0) & (x2> x3) & (x2< x1) & (x2< x4))  |
+                ((x2> x0) & (x2> x4) & (x2< x3) & (x2< x1))  |
+                ((x2> x1) & (x2> x3) & (x2< x0) & (x2< x4))  |
+                ((x2> x1) & (x2> x4) & (x2< x0) & (x2< x3))  |
+                ((x2> x3) & (x2> x4) & (x2< x0) & (x2< x1))
+))
++         (3*(
+              ((x3> x0) & (x3> x2) & (x3< x1) & (x3< x4))  |
+                ((x3> x0) & (x3> x1) & (x3< x2) & (x3< x4))  |
+                ((x3> x0) & (x3> x4) & (x3< x1) & (x3< x2))  |
+                ((x3> x2) & (x3> x1) & (x3< x0) & (x3< x4))  |
+                ((x3> x2) & (x3> x4) & (x3< x0) & (x3< x1))  |
+                ((x3> x1) & (x3> x4) & (x3< x0) & (x3< x2))
+))
++         (4*(
+              ((x4> x0) & (x4> x2) & (x4< x3) & (x4< x1))  |
+                ((x4> x0) & (x4> x3) & (x4< x2) & (x4< x1))  |
+                ((x4> x0) & (x4> x1) & (x4< x3) & (x4< x2))  |
+                ((x4> x2) & (x4> x3) & (x4< x0) & (x4< x1))  |
+                ((x4> x2) & (x4> x1) & (x4< x0) & (x4< x3))  |
+                ((x4> x3) & (x4> x1) & (x4< x0) & (x4< x2))
+));
+        // twoSmaller(n0,n1,x )=
         };
     };
   };
-// slidingMedianOfMedians(3) = MedianOfMedians3(x0,x1,x2);
-//slidingMedianOfMedians(3) =
+
 
 
 
