@@ -31,6 +31,7 @@ import ("lib/slidingReduce.lib");
 // rmsMaxSize = 512; //441
 rmsMaxSize = pow(2,rmsMaxSize_pow);
 rmsMaxSize_pow =14;
+// rmsMaxSize_pow =4;
 
 //
 MAX_flt = fconstant(int LDBL_MAX, <float.h>);
@@ -69,6 +70,7 @@ knee = easy_group(hslider("[5] Knee [unit:dB] [style:knob]
       [tooltip: soft knee amount in dB]",
                          6, 0, 30, 0.1));
 
+// TODO: all gains up-down all times left-right
 
 ingain        = easy_group(hslider("[5] Input Gain [unit:dB]   [tooltip: The input signal level is increased by this amount (in dB) to make up for the level lost due to compression]",0, -40, 40, 0.1) : ba.db2linear : si.smooth(0.999));
 drywet        = easy_group(hslider("[6]dry-wet[tooltip: ]", 1.0, 0.0, 1.0, 0.1));
@@ -82,9 +84,10 @@ knob_power = hslider("knob_power", 0.001, 0.001, 1, 0.001);
 knob_power2 = hslider("knob_power2", 1, 0.001, 1, 0.001);
 // rms_speed2     = (attack*2000):int:meter2;
 meter2 = meter_group(_<:(_, ((vbargraph("[2][unit:dB][tooltip: input level in dB]2", 0, rmsMaxSize)))):attach);
-meter3 = meter_group(_<:(_, ((vbargraph("[3][unit:dB][tooltip: input level in dB]3", 0, rmsMaxSize)))):attach);
-ratio         = detector_group(hslider("[5] detector Ratio   [tooltip: A compression Ratio of N means that for each N dB increase in input signal level above Threshold, the output level goes up 1 dB]", 20, 1, 20, 0.1));
-release       = detector_group(time_ratio_release(hslider("[7] Release [unit:ms]   [tooltip: Time constant in ms (1/e smoothing time) for the compression gain to approach (exponentially) a new higher target level (the compression 'releasing')]",0.1, 0.1, 2000, 0.1)/1000));
+meter3 = meter_group(_<:(_, (1/_:(vbargraph("[3] 3", 0, 10000000)))):attach);
+// powerknob = hslider
+ratio         = detector_group(hslider("[5] detector Ratio   [tooltip: A compression Ratio of N means that for each N dB increase in input signal level above Threshold, the output level goes up 1 dB]", 20, 1, 200, 0.1));
+release       = detector_group(time_ratio_release(hslider("[7] Detector Release [unit:ms]   [tooltip: Time constant in ms (1/e smoothing time) for the compression gain to approach (exponentially) a new higher target level (the compression 'releasing')]",0.1, 0.1, 2000, 0.1)/1000));
 //hpf_switch  = detector_group(select2( hslider("[8]sidechain hpf[tooltip: ]", 1, 0, 1, 1), 1.0, 0.0));
 hpf_freq      = detector_group( hslider("[8]sidechain hpf[tooltip: ]", 154, 1, 400, 1));
 
@@ -92,9 +95,10 @@ powerScale(x) =((x>=0)*(1/((x+1):pow(3))))+((x<0)* (((x*-1)+1):pow(3)));
 
 // power          = strength; // shape_group(hslider("[1]power[tooltip: ]", 1.881 , -33, 33 , 0.001):powerScale);
 power          = shape_group(hslider("[1]power[tooltip: ]", 1.881 , -33, 33 , 0.001):powerScale);
-maxGR          = shape_group(hslider("[2] Max Gain Reduction [unit:dB]   [tooltip: The maximum amount of gain reduction]",-15, -60, 0, 0.1)) : ba.db2linear : si.smooth(0.999);
-curve          = shape_group(hslider("[3]curve[tooltip: ]", 0, -1, 1 , 0.001)*-1);
-shape          = shape_group(((hslider("[4]shape[tooltip: ]", 94, 1, 100 , 0.001)*-1)+101):pow(2));
+maxGR          = shape_group(hslider("[2] Max Gain Reduction [unit:dB]   [tooltip: The maximum amount of gain reduction]",-15, -60, 0, 0.1)) ;
+maxOvershoot   = shape_group(hslider("[3] Max overshoot [unit:dB]   [tooltip: How much can we go below the threshold]",-15, -60, 0, 0.1)) ;
+curve          = shape_group(hslider("[4]curve[tooltip: ]", 0, -1, 1 , 0.001)*-1);
+shape          = shape_group(((hslider("[5]shape[tooltip: ]", 94, 1, 100 , 0.001)*-1)+101):pow(2));
 
 feedFwBw     = out_group(hslider("[0]feedback/feedforward[tooltip: ]", 0, 0, 1 , 0.001));
 hiShelfFreq  = out_group(hslider("[1]hi shelf freq[tooltip: ]",134, 1,   400,   1));
@@ -104,8 +108,19 @@ outgain      = out_group(hslider("[3]output gain (dB)[tooltip: ]",           0, 
 bypass_switch = select2( hslider("bypass[tooltip: ]", 0, 0, 1, 1), 1.0, 0.0);
 
 ratelimit      = ratelimit_group(hslider("[0]ratelimit amount[tooltip: ]", 1, 0, 1 , 0.001));
-maxRateAttack  = ratelimit_group(hslider("[1]max attack[unit:dB/s][tooltip: ]", 1020, 6, 8000 , 1)/ma.SR);
-maxRateDecay   = ratelimit_group(hslider("[2]max decay[unit:dB/s][tooltip: ]", 3813, 6, 8000 , 1)/ma.SR);
+maxRateAttack  =
+  select2(attackFader>=23.7
+         ,((attackFader/23.7)*-6980)+8000
+         ,(((attackFader-23.7)/(maxAttack-23.7))*-1020)+1020
+  );
+// maxRateAttack  = ratelimit_group(hslider("[1]max attack[unit:dB/s][tooltip: ]", 1020, 6, 8000 , 1)/ma.SR);
+maxRateDecay   = // 0 => 8000, 0.482 = 3813  1=24
+  select2(easy_release_knob>=0.482
+      // ,((easy_release_knob/0.482)*-(8000-3813))+8000
+         ,((easy_release_knob/0.482)*(-8000+3813))+8000
+         ,(((easy_release_knob-0.482)/(1-0.482))*(-3813+24))+3813
+  )/ma.SR;
+// maxRateDecay   = ratelimit_group(hslider("[2]max decay[unit:dB/s][tooltip: ]", 3813, 6, 8000 , 1)/ma.SR);
 decayMult      = ratelimit_group(hslider("[3]decayMult[tooltip: ]", 20000 , 0,20000 , 0.001)/100);
 decayPower     = ratelimit_group(hslider("[4]decayPower[tooltip: ]", 50, 0, 50 , 0.001));
 IM_size        = easy_release;// ratelimit_group(hslider("[5]IM_size[tooltip: ]",108, 1,   rmsMaxSize,   1)*44100/ma.SR); //0.0005 * min(192000.0, max(22050.0, ma.SR));
@@ -143,11 +158,11 @@ curve_pow(fact,x) = ((x*(x>0):pow(p))+(x*-1*(x<=0):pow(p)*-1)) with
   p = exp(fact*10*(log(2)));
 };
 
-rateLimiter(maxRateAttack,maxRateDecay,prevx,x) = prevx+newtangent:min(0):max(maxGR:ba.linear2db)
+rateLimiter(maxRateAttack,maxRateDecay,prevx,x) = prevx+newtangent:min(0):ba.linear2db:min(maxGR)//:max(maxOvershoot+threshold)
 with {
   tangent     = x- prevx;
   avgChange   = abs((tangent@1)-(tangent@2)):slidingMeanN(IM_size,rmsMaxSize)*decayMult:_+1:pow(decayPower)-1;
-  newtangent  = select2(tangent>0,minus,plus):max(maxRateAttack*-1):min(maxRateDecay);
+  newtangent  = select2(tangent>0,minus,plus):max(maxRateAttack*-1):min(maxRateDecay):meter3;
   plus        = tangent*((abs(avgChange)*-1):ba.db2linear);
   minus       = tangent;//*((abs(avgChange)*0.5):ba.db2linear);
 //select2(abs(tangent)>maxRate,tangent,maxRate);
