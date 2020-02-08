@@ -162,15 +162,15 @@ rateLimiter(maxRateAttack,maxRateDecay,prevx,x) = prevx+newtangent:min(0):max(ma
 with {
   tangent     = x- prevx;
   avgChange   = abs((tangent@1)-(tangent@2)):slidingMeanN(IM_size,rmsMaxSize)*decayMult:_+1:pow(decayPower)-1;
-  newtangent  = select2(tangent>0,minus,plus):max(maxRateAttack*-1):min(maxRateDecay):meter3;
+  newtangent  = select2(tangent>0,minus,plus):max(maxRateAttack*-1):min(maxRateDecay);
   plus        = tangent*((abs(avgChange)*-1):ba.db2linear);
   minus       = tangent;//*((abs(avgChange)*0.5):ba.db2linear);
 //select2(abs(tangent)>maxRate,tangent,maxRate);
 
 };
 
-COMP = detector:(_-maxGR)*(1/(1-maxGR)): curve_pow(curve):tanshape(shape):_*(1-maxGR):_+maxGR:ba.linear2db
-                                                                                              <: _,( rateLimiter(maxRateAttack,maxRateDecay) ~ _ ):crossfade(ratelimit)*strength : ba.db2linear;//:( rateLimiter(maxRate) ~ _ );
+COMP = detector:(_-maxGR)*(1/(1-maxGR)): curve_pow(curve):tanshape(shape):_*(1-maxGR):_+maxGR:ba.linear2db*strength
+                                                                                              <: _,( rateLimiter(maxRateAttack,maxRateDecay) ~ _ ):crossfade(ratelimit) : ba.db2linear;//:( rateLimiter(maxRate) ~ _ );
 
 blushcomp =_*ingain: (_ <:( crossfade(feedFwBw,_,_),_ : ( COMP , _ ) : gainHiShelfCrossfade(gainHS))~_)*(ba.db2linear(outgain));
 
