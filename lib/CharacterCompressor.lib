@@ -31,7 +31,7 @@ import ("lib/slidingReduce.lib");
 // rmsMaxSize = 512; //441
 rmsMaxSize = pow(2,rmsMaxSize_pow);
 rmsMaxSize_pow =14;
-// rmsMaxSize_pow =7;
+// rmsMaxSize_pow =9;
 
 //
 MAX_flt = fconstant(int LDBL_MAX, <float.h>);
@@ -48,14 +48,17 @@ advanced_group(x)   = tab_group(hgroup("[2] advanced", x));
 
 detector_group(x)  = advanced_group(vgroup("[0]detector", x));
 post_group(x)      = advanced_group(vgroup("[1]", x));
-ratelimit_group(x) = advanced_group(vgroup("[2]ratelimit", x));
+ratelimit_group(x) = advanced_group(hgroup("[2]ratelimit", x));
+
+ratelimit_knob_group(x) = ratelimit_group(vgroup("[0]", x));
 
 shape_group(x)      = post_group(vgroup("[0]shape", x));
 out_group(x)        = post_group(vgroup("[2]", x));
 
-envelop = abs : max ~ -(1.0/ma.SR) : max(ba.db2linear(-70)) : ba.linear2db;
-meter = meter_group(_<:(_, (ba.linear2db :(vbargraph("[1][unit:dB][tooltip: input level in dB]", -60, 0)))):attach);
-
+bypass = checkbox("bypass");
+meter = _<:(_, (ba.linear2db *(1+bypass*-1) :(meter_group(vbargraph("[1]GR[unit:dB][tooltip: gain reduction in dB]", -60, 0)))):attach);
+// meter = meter_group(_<:(_, _*(1+bypass*-1):(ba.linear2db :(vbargraph("[1][unit:dB][tooltip: gain reduction in dB]", -60, 0)))):attach);
+changeMeter = _<:(_, (max(-90):min(1)*(1+bypass*-1):ratelimit_group(vbargraph("[1][unit:dB][tooltip: change]", -90, 0))):attach);
 ingain        = easy_group(hslider("[0] Input Gain [unit:dB]   [tooltip: The input signal level is increased by this amount (in dB) to make up for the level lost due to compression]",0, -40, 40, 0.1) : ba.db2linear : si.smooth(0.999));
 threshold     = easy_group(hslider("[1] Threshold [unit:dB]   [tooltip: When the signal level exceeds the Threshold (in dB), its level is compressed according to the Ratio]", -27.1, -80, 0, 0.1));
 // strength = easy_group((hslider("[1]strength[tooltip: ]", 0.4145 , 0, 1 , 0.001):pow(strpw)*-22)+11:powerScale);
@@ -71,7 +74,7 @@ easy_release = pow(2,(easy_release_knob*rmsMaxSize_pow))*44100/ma.SR:max(1):int;
 outgain      = easy_group(hslider("[5]output gain (dB)[tooltip: ]",           0,      -40,   40,   0.1):si.smooth(0.999)); // DB
 knee = easy_group(hslider("[5] Knee [unit:dB] [style:knob]
       [tooltip: soft knee amount in dB]",
-                         6, 0, 30, 0.1));
+                          6, 0, 30, 0.1));
 
 // TODO: all gains up-down all times left-right
 
@@ -109,22 +112,23 @@ gainHS       = out_group(hslider("[2]gain/hi-shelve crossfade[tooltip: ]", 0.811
 
 bypass_switch = select2( hslider("bypass[tooltip: ]", 0, 0, 1, 1), 1.0, 0.0);
 
-ratelimit      = ratelimit_group(hslider("[0]ratelimit amount[tooltip: ]", 1, 0, 1 , 0.001));
+ratelimit      = ratelimit_knob_group(hslider("[0]ratelimit amount[tooltip: ]", 1, 0, 1 , 0.001));
 // maxRateAttack  =
 // select2(attackFader>=23.7
 // ,((attackFader/23.7)*-6980)+8000
 // ,(((attackFader-23.7)/(maxAttack-23.7))*-1020)+1020
 // );
-maxRateAttack  = ratelimit_group(hslider("[1]max attack[unit:dB/s][tooltip: ]", 1020, 6, 8000 , 1)/ma.SR);
+maxRateAttack  = ratelimit_knob_group(hslider("[1]max attack[unit:dB/s][tooltip: ]", 1020, 6, 8000 , 1)/ma.SR);
 // maxRateDecay   = // 0 => 8000, 0.482 = 3813  1=24
 // select2(easy_release_knob>=0.482
 // ,((easy_release_knob/0.482)*(-8000+3813))+8000
 // ,(((easy_release_knob-0.482)/(1-0.482))*(-3813+24))+3813
 // )/ma.SR;
-maxRateDecay   = ratelimit_group(hslider("[2]max decay[unit:dB/s][tooltip: ]", 3813, 6, 8000 , 1)/ma.SR);
-decayMult      = ratelimit_group(hslider("[3]decayMult[tooltip: ]", 20000 , 0,20000 , 1)/100);
-decayPower     = ratelimit_group(hslider("[4]decayPower[tooltip: ]", 50, 0, 50 , 0.1));
-IM_size        = easy_release;// ratelimit_group(hslider("[5]IM_size[tooltip: ]",108, 1,   rmsMaxSize,   1)*44100/ma.SR); //0.0005 * min(192000.0, max(22050.0, ma.SR));
+maxRateDecay   = ratelimit_knob_group(hslider("[2]max decay[unit:dB/s][tooltip: ]", 3813, 6, 8000 , 1)/ma.SR);
+decayMult      = ratelimit_knob_group(hslider("[3]decayMult[tooltip: ]", 20000 , 0,200000 , 100)/100);
+decayPower     = ratelimit_knob_group(hslider("[4]decayPower[tooltip: ]", 50, 0, 50 , 0.1));
+GRcompensate   = ratelimit_knob_group(hslider("[5]GRcompensate[tooltip: ]", 1 , 0,10 , 0.001));
+IM_size        = easy_release;// ratelimit_knob_group(hslider("[5]IM_size[tooltip: ]",108, 1,   rmsMaxSize,   1)*44100/ma.SR); //0.0005 * min(192000.0, max(22050.0, ma.SR));
 
 powlim(x,base) = x:max(log(MAX_flt)/log(base)):  min(log(MIN_flt)/log(base));
 
@@ -141,7 +145,7 @@ rmsFade = _<:crossfade(peakRMS,_,slidingRMSn( rms_speed, rmsMaxSize)); // bypass
 /*COMP = (1/((1/(((_ <: ( HPF : DETECTOR : RATIO : ba.db2linear : max(ba.db2linear(-140)) : min (1) :pow(prePower):ba.linear2db*/
 /*<: ( RATELIMITER ~ _ ),_:crossfade(ratelimit) : ba.db2linear ): max(MIN_flt) : min (MAX_flt)):pow(1/power))):max(ba.db2linear(-140))*maxGR*2*ma.PI:ma.tanh:/(2*ma.PI))/maxGR)):min(1);*/
 
-detector = ((_ <: ( HPF(hpf_freq) :rmsFade: DETECTOR : RATIO : ba.db2linear:min(1):max(MIN_flt)))<:_,_:pow(powlim(power)));
+detector = ((_ <: ( HPF(hpf_freq) :rmsFade: DETECTOR : RATIO : ba.db2linear:min(1):max(MIN_flt))));
 
 //<:_,_:pow(powlim( prePower)):preRateLim:min(1):max(MIN_flt)
 
@@ -164,17 +168,20 @@ with {
   tangent     = x- prevx;
   avgChange   = abs((tangent@1)-(tangent@2)):slidingMeanN(IM_size,rmsMaxSize)*decayMult:_+1:pow(decayPower)-1;
   newtangent  = select2(tangent>0,minus,plus):max(maxRateAttack*-1):min(maxRateDecay);
-  plus        = tangent*((abs(avgChange)*-1):ba.db2linear);
+  plus        = tangent*((abs(avgChange)*-1):changeMeter:ba.db2linear);
   minus       = tangent;//*((abs(avgChange)*0.5):ba.db2linear);
 };
 
-COMP(x) = x:detector:(_-maxGR)*(1/(1-maxGR)): curve_pow(curve):tanshape(shape):_*(1-maxGR):_+maxGR:ba.linear2db*strength
-                                                                                                   <: _,( rateLimiter(maxRateAttack,maxRateDecay) ~ _ ):crossfade(ratelimit) : ba.db2linear;
+COMP(x) = x:detector:shaper:ba.linear2db*strength
+                            <: _,( rateLimiter(maxRateAttack,maxRateDecay) ~ _ ):crossfade(ratelimit) : ba.db2linear;
 
+shaper = _<:_,_:pow(powlim(power)):(_-maxGR)*(1/(1-maxGR)): curve_pow(curve):tanshape(shape):_*(1-maxGR):_+maxGR;
 
 blushcomp =_*ingain: (_ <:( crossfade(feedFwBw,_,_),_ : ( COMP , _ ) : gainHiShelfCrossfade(gainHS))~_)*(ba.db2linear(outgain));
 
-midStereoBlushComp(x,y) =(x+y)*ingain: ((( (crossfade(feedFwBw,_,_): ( COMP ))<:(_,_)) :((_,(x*ingain):gainHiShelfCrossfade(gainHS)),(_,(y*ingain):gainHiShelfCrossfade(gainHS))))~((_,_):+)):((_*(ba.db2linear(outgain))),(_*(ba.db2linear(outgain))));
+midStereoBlushComp(x,y) =(x+y)*ingain: ((( (crossfade(feedFwBw,_,_): ( COMP ))<:(_,_)) :((_,(x*ingain):gainHiShelfCrossfade(gainHS)),(_,(y*ingain):gainHiShelfCrossfade(gainHS))))~((_,_):+))
+// :((_*(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass),(_*(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass));
+                         :((_*(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass),(_*(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass));
 
 midBlushComp(x,y) =(x+y)*ingain: (_ <:( crossfade(feedFwBw,_,_),_ : ( COMP , _ ) : gainHiShelfCrossfade(gainHS))~_)
 *(ba.db2linear(outgain))<:((_-(y:fi.high_shelf(0,hiShelfFreq))),(_-(x:fi.high_shelf(0,hiShelfFreq))));
