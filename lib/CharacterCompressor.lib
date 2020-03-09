@@ -109,6 +109,7 @@ shape          = shape_group(((hslider("[5]shape[tooltip: ]", 94, 1, 100 , 0.1)*
 feedFwBw     = out_group(hslider("[0]feedback/feedforward[tooltip: ]", 0, 0, 1 , 0.001));
 hiShelfFreq  = out_group(hslider("[1]hi shelf freq[tooltip: ]",134, 1,   400,   1));
 gainHS       = out_group(hslider("[2]gain/hi-shelve crossfade[tooltip: ]", 0.811, 0, 1 , 0.001));
+dryWet       = out_group(hslider("[3]dry/wet", 1, 0, 1, 0.001));
 
 bypass_switch = select2( hslider("bypass[tooltip: ]", 0, 0, 1, 1), 1.0, 0.0);
 
@@ -177,11 +178,14 @@ COMP(x) = x:detector:shaper:ba.linear2db*strength
 
 shaper = _<:_,_:pow(powlim(power)):(_-maxGR)*(1/(1-maxGR)): curve_pow(curve):tanshape(shape):_*(1-maxGR):_+maxGR;
 
-blushcomp =_*ingain: (_ <:( crossfade(feedFwBw,_,_),_ : ( COMP , _ ) : gainHiShelfCrossfade(gainHS))~_)*(ba.db2linear(outgain));
+blushcomp(x) =crossfade(dryWet,x,(x*ingain: (_ <:( crossfade(feedFwBw,_,_),_ : ( COMP , _ ) : gainHiShelfCrossfade(gainHS))~_)*(1+bypass*-1)))*(ba.db2linear(outgain))+(x*bypass);
 
 midStereoBlushComp(x,y) =(x+y)*ingain: ((( (crossfade(feedFwBw,_,_): ( COMP ))<:(_,_)) :((_,(x*ingain):gainHiShelfCrossfade(gainHS)),(_,(y*ingain):gainHiShelfCrossfade(gainHS))))~((_,_):+))
 // :((_*(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass),(_*(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass));
-                         :((_*(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass),(_*(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass));
+                         :(
+                           (crossfade(dryWet,x,_)*(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass)
+                          ,(crossfade(dryWet,y,_)*(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass)
+                         );
 
 midBlushComp(x,y) =(x+y)*ingain: (_ <:( crossfade(feedFwBw,_,_),_ : ( COMP , _ ) : gainHiShelfCrossfade(gainHS))~_)
 *(ba.db2linear(outgain))<:((_-(y:fi.high_shelf(0,hiShelfFreq))),(_-(x:fi.high_shelf(0,hiShelfFreq))));
