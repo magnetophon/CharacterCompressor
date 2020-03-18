@@ -30,9 +30,9 @@ import ("lib/slidingReduce.lib");
 // rmsMaxSize = 441; //441
 // rmsMaxSize = 512; //441
 rmsMaxSize = pow(2,rmsMaxSize_pow);
-// rmsMaxSize_pow =14;
+rmsMaxSize_pow =14;
 // rmsMaxSize_pow =9; //512
-rmsMaxSize_pow =7; // 128
+// rmsMaxSize_pow =7; // 128
 
 //
 MAX_flt = fconstant(int LDBL_MAX, <float.h>);
@@ -40,8 +40,8 @@ MIN_flt = fconstant(int LDBL_MIN, <float.h>);
 
 main_group(x)  = (hgroup("[1]", x));
 
-meter_group(x)  = main_group(hgroup("[1]", x));
-tab_group(x) = main_group(hgroup("[2]", x));
+tab_group(x) = main_group(hgroup("[1]", x));
+meter_group(x)  = main_group(hgroup("[2]", x));
 // tab_group(x) = main_group(tgroup("[2]", x));
 
 easy_group(x)   = tab_group(vgroup("[1] easy", x));
@@ -57,10 +57,10 @@ shape_group(x)      = post_group(vgroup("[0]shape", x));
 out_group(x)        = post_group(vgroup("[2]", x));
 
 bypass = checkbox("bypass");
-meter = _<:(_, (ba.linear2db *(1+bypass*-1) :(meter_group(vbargraph("[1]GR[unit:dB][tooltip: gain reduction in dB]", -60, 0)))):attach);
+meter = _<:(_, (_*(1+bypass*-1) :(meter_group(vbargraph("[1]GR[unit:dB][tooltip: gain reduction in dB]", -60, 0)))):attach);
 // meter = meter_group(_<:(_, _*(1+bypass*-1):(ba.linear2db :(vbargraph("[1][unit:dB][tooltip: gain reduction in dB]", -60, 0)))):attach);
 changeMeter = _<:(_, (max(-90):min(1)*(1+bypass*-1):ratelimit_group(vbargraph("[1][unit:dB][tooltip: change]", -90, 0))):attach);
-ingain        = easy_group(hslider("[0] Input Gain [unit:dB]   [tooltip: The input signal level is increased by this amount (in dB) to make up for the level lost due to compression]",0, -40, 40, 0.1) : ba.db2linear : si.smooth(0.999));
+ingain        = easy_group(hslider("[0] Input Gain [unit:dB]   [tooltip: The input signal level is increased by this amount (in dB) to make up for the level lost due to compression]",0, -40, 40, 0.1) : si.smooth(0.999));
 threshold     = easy_group(hslider("[1] Threshold [unit:dB]   [tooltip: When the signal level exceeds the Threshold (in dB), its level is compressed according to the Ratio]", -27.1, -80, 0, 0.1));
 // strength = easy_group((hslider("[1]strength[tooltip: ]", 0.4145 , 0, 1 , 0.001):pow(strpw)*-22)+11:powerScale);
 strength = easy_group((hslider("[2]strength[tooltip: ]", 1 , 0, 2 , 0.001)));
@@ -144,7 +144,8 @@ gainPlusMeter(gain,dry) = (dry * (gain:meter));
 
 hiShelfPlusMeter(gain,dry) = (dry :fi.high_shelf(gain:meter:ba.linear2db,hiShelfFreq));
 
-gainHiShelfCrossfade(crossfade,gain,dry) = (dry * ((gain:meter:ba.linear2db)*(1-crossfade):ba.db2linear)): fi.high_shelf(((gain:ba.linear2db)*crossfade),hiShelfFreq);
+gainHiShelfCrossfade(crossfade,gain,dry) = (dry * (gain*(1-crossfade):ba.db2linear)): fi.high_shelf((gain*crossfade),hiShelfFreq);
+// gainHiShelfCrossfade(crossfade,gain,dry) = (dry * (gain:ba.db2linear));
 
 crossfade(x,a,b) = a*(1-x),b*x : +;
 
@@ -193,18 +194,17 @@ with {
 };
 
 COMP(x) = x:detector:shaper:ba.linear2db
-                            <: _,( rateLimiter(maxRateAttack,maxRateDecay) ~ _ ):crossfade(ratelimit) : ba.db2linear;
+                            <: _,( rateLimiter(maxRateAttack,maxRateDecay) ~ _ ):crossfade(ratelimit);
 
 shaper = _<:_,_:pow(powlim(power)):(_-maxGR)*(1/(1-maxGR)): curve_pow(curve):tanshape(shape):_*(1-maxGR):_+maxGR;
 
-blushcomp(x) =crossfade(dryWet,x,(x*ingain: (_ <:( crossfade(feedFwBw,_,_),_ : ( COMP , _ ) : gainHiShelfCrossfade(gainHS))~_)*(1+bypass*-1)))*(ba.db2linear(outgain))+(x*bypass);
+blushcomp(x) =crossfade(dryWet,x,(x: (_ <:( crossfade(feedFwBw,_,_),_ : ( COMP , _ ) : gainHiShelfCrossfade(gainHS))~_)*(1+bypass*-1)))*(ba.db2linear(outgain))+(x*bypass);
 
-midStereoBlushComp(x,y) =(x+y)*ingain: ((( (crossfade(feedFwBw,_,_): ( COMP ))<:(_,_,_)) :((_,(x*ingain):gainHiShelfCrossfade(gainHS)),(_,(y*ingain):gainHiShelfCrossfade(gainHS)),_))~((_,_,!):+))
+midStereoBlushComp(x,y) =(x*(ingain:ba.db2linear)+y*(ingain:ba.db2linear)): (( (crossfade(feedFwBw,_,_): ( COMP )) <: ((_,x:gainHiShelfCrossfade(gainHS)),(_,y:gainHiShelfCrossfade(gainHS)),_))~((_,_,!):+))
 // :((_*(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass),(_*(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass));
 :!,!,_<:(
-                           (crossfade(dryWet,x,_*x)*(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass)
-                          ,(crossfade(dryWet,y,_*y)*(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass)
-
+                           (crossfade(dryWet,x,((_*strength:meter),x*(ingain:ba.db2linear)):gainHiShelfCrossfade(gainHS))*(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass)
+                          ,(crossfade(dryWet,y,((_*strength:meter),y*(ingain:ba.db2linear)):gainHiShelfCrossfade(gainHS))*(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass)
 );
 
 midBlushComp(x,y) =(x+y)*ingain: (_ <:( crossfade(feedFwBw,_,_),_ : ( COMP , _ ) : gainHiShelfCrossfade(gainHS))~_)
