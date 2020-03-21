@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Bart Brouns
+ *  Copyright (C) 2020 Bart Brouns
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; version 2 of the License.
@@ -64,7 +64,7 @@ ingain        = easy_group(hslider("[0] Input Gain [unit:dB]   [tooltip: The inp
 threshold     = easy_group(hslider("[1] Threshold [unit:dB]   [tooltip: When the signal level exceeds the Threshold (in dB), its level is compressed according to the Ratio]", -27.1, -80, 0, 0.1));
 // strength = easy_group((hslider("[1]strength[tooltip: ]", 0.4145 , 0, 1 , 0.001):pow(strpw)*-22)+11:powerScale);
 strength = easy_group((hslider("[2]strength[tooltip: ]", 1 , 0, 2 , 0.001)));
-det_strength = easy_group((hslider("[2]det strength[tooltip: ]", 1 , 0, 2 , 0.001)));
+det_strength = detector_group((hslider("[2]det strength[tooltip: ]", 1 , 0, 2 , 0.001)));
 strpw = hslider("strpw", 1, 0.001, 1, 0.001);
 attackFader=     easy_group(hslider("[3] Attack [unit:ms]   [tooltip: Time constant in ms (1/e smoothing time) for the compression gain to approach (exponentially) a new lower target level (the compression `kicking in')]", 23.7, 0.1, maxAttack , 0.1));
 maxAttack = 500;
@@ -75,7 +75,7 @@ easy_release_knob = easy_group(hslider("[4]Release[tooltip: ]",0.482, 0,   1,   
 easy_release = pow(2,(easy_release_knob*rmsMaxSize_pow))*44100/ma.SR:max(1):int;
 
 outgain      = easy_group(hslider("[5]output gain (dB)[tooltip: ]",           0,      -40,   40,   0.1):si.smooth(0.999)); // DB
-knee = easy_group(hslider("[5] Knee [unit:dB] [style:knob]
+knee = easy_group(hslider("[5] Knee [unit:dB]
       [tooltip: soft knee amount in dB]",
                           0, 0, 30, 0.1));
 
@@ -198,13 +198,13 @@ COMP(x) = x:detector:shaper:ba.linear2db
 
 shaper = _<:_,_:pow(powlim(power)):(_-maxGR)*(1/(1-maxGR)): curve_pow(curve):tanshape(shape):_*(1-maxGR):_+maxGR;
 
-blushcomp(x) =crossfade(dryWet,x,(x: (_ <:( crossfade(feedFwBw,_,_),_ : ( COMP , _ ) : gainHiShelfCrossfade(gainHS))~_)*(1+bypass*-1)))*(ba.db2linear(outgain))+(x*bypass);
+blushcomp(x) =crossfade(dryWet,x,( (( crossfade(feedFwBw,x,_) : ( COMP , x ) : gainHiShelfCrossfade(gainHS))~_)))*(ba.db2linear(outgain))*(1+bypass*-1)+(x*bypass);
 
-midStereoBlushComp(x,y) =(x*(ingain:ba.db2linear)+y*(ingain:ba.db2linear)): (( (crossfade(feedFwBw,_,_): ( COMP )) <: ((_,x:gainHiShelfCrossfade(gainHS)),(_,y:gainHiShelfCrossfade(gainHS)),_))~((_,_,!):+))
+midStereoBlushComp(x,y) =(x*(ingain:ba.db2linear)+y*(ingain:ba.db2linear)): (( (crossfade(feedFwBw,_,_): ( COMP )) <: ((_,(x+y):gainHiShelfCrossfade(gainHS)),_))~(_,!))
 // :((_*(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass),(_*(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass));
-:!,!,_<:(
-                           (crossfade(dryWet,x,((_*strength:meter),x*(ingain:ba.db2linear)):gainHiShelfCrossfade(gainHS))*(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass)
-                          ,(crossfade(dryWet,y,((_*strength:meter),y*(ingain:ba.db2linear)):gainHiShelfCrossfade(gainHS))*(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass)
+:!,_<:(
+                           ( ((x:fi.high_shelf(0,hiShelfFreq)),(((_*strength:meter),x*(ingain:ba.db2linear)):gainHiShelfCrossfade(gainHS))):crossfade(dryWet) *(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass)
+                          ,( ((y:fi.high_shelf(0,hiShelfFreq)),(((_*strength:meter),y*(ingain:ba.db2linear)):gainHiShelfCrossfade(gainHS))):crossfade(dryWet) *(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass)
 );
 
 midBlushComp(x,y) =(x+y)*ingain: (_ <:( crossfade(feedFwBw,_,_),_ : ( COMP , _ ) : gainHiShelfCrossfade(gainHS))~_)
