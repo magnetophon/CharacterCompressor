@@ -63,14 +63,14 @@ changeMeter = _<:(_, (max(-90):min(1)*(1+bypass*-1):ratelimit_group(vbargraph("[
 ingain        = easy_group(hslider("[0] Input Gain [unit:dB]   [tooltip: The input signal level is increased by this amount (in dB) to make up for the level lost due to compression]",0, -40, 40, 0.1) : si.smooth(0.999));
 threshold     = easy_group(hslider("[1] Threshold [unit:dB]   [tooltip: When the signal level exceeds the Threshold (in dB), its level is compressed according to the Ratio]", -27.1, -80, 0, 0.1));
 // strength = easy_group((hslider("[1]strength[tooltip: ]", 0.4145 , 0, 1 , 0.001):pow(strpw)*-22)+11:powerScale);
-strength = easy_group((hslider("[2]strength[tooltip: ]", 1 , 0, 2 , 0.001)));
-det_strength = detector_group((hslider("[2]det strength[tooltip: ]", 1 , 0, 8 , 0.001)));
+strength = easy_group((hslider("[2]strength[tooltip: ]", 1 , 0, 8 , 0.1)));
+det_strength = detector_group((hslider("[2]det strength[tooltip: ]", 1 , 0, 8 , 0.1)));
 strpw = hslider("strpw", 1, 0.001, 1, 0.001);
-attackFader=     easy_group(hslider("[3] Attack [unit:ms]   [tooltip: Time constant in ms (1/e smoothing time) for the compression gain to approach (exponentially) a new lower target level (the compression `kicking in')]", 23.7, 0.1, maxAttack , 0.1));
+attackFader=     easy_group(hslider("[3] Attack [unit:ms]  [scale:log] [tooltip: Time constant in ms (1/e smoothing time) for the compression gain to approach (exponentially) a new lower target level (the compression `kicking in')]", 23.7, 0.001, maxAttack , 0.1));
 maxAttack = 500;
 attack        = time_ratio_attack(attackFader/1000) ;
 // attack        = attackFader/1000;
-easy_release_knob = easy_group(hslider("[4]Release[tooltip: ]",0.482, 0,   1,   0.001)); //0.0005 * min(192000.0, max(22050.0, ma.SR));
+easy_release_knob = easy_group(hslider("[4]Release [unit:ms]  [scale:log] [tooltip: time constant (ms) coming out of compression]",16, 0,   1000,   0.1))/1000; //0.0005 * min(192000.0, max(22050.0, ma.SR));
 // easy_release = easy_group(hslider("[4]Release[tooltip: ]",108, 1,   rmsMaxSize,   1)*44100/ma.SR); //0.0005 * min(192000.0, max(22050.0, ma.SR));
 easy_release = pow(2,(easy_release_knob*rmsMaxSize_pow))*44100/ma.SR:max(1):int;
 
@@ -83,8 +83,8 @@ knee = easy_group(hslider("[5] Knee [unit:dB]
 
 drywet        = easy_group(hslider("[6]dry-wet[tooltip: ]", 1.0, 0.0, 1.0, 0.1));
 
-peakRMS       = detector_group(hslider("[2] peak/RMS [tooltip: Peak or RMS level detection",1, 0, 1, 0.001));
-rms_speed     = detector_group(hslider("[3]RMS size[tooltip: ]",96, 2,   rmsMaxSize,   1)*44100/ma.SR); //0.0005 * min(192000.0, max(22050.0, ma.SR));
+peakRMS       = detector_group(hslider("[2] peak/RMS [tooltip: Peak or RMS level detection",1, 0, 1, 0.01));
+rms_speed     = detector_group(hslider("[3]RMS size[scale:log][tooltip: ]",96, 2,   rmsMaxSize,   1)*44100/ma.SR); //0.0005 * min(192000.0, max(22050.0, ma.SR));
 // rms_speed     = easy_group(pow(2,hslider("[4]Release2[tooltip: ]",6.75, 1,   rmsMaxSize_pow,   0.25))*44100/ma.SR):max(96):int; //0.0005 * min(192000.0, max(22050.0, ma.SR));
 // rms_speed     = pow(2,
 // (attackFader/maxAttack:pow(0.250)*rmsMaxSize_pow):min(easy_release_knob:pow(0.125)*rmsMaxSize_pow)):max(96):int;
@@ -98,7 +98,7 @@ ratio         = detector_group(hslider("[5] detector Ratio   [tooltip: A compres
 release       = detector_group(time_ratio_release(hslider("[7] Detector Release [unit:ms]   [tooltip: Time constant in ms (1/e smoothing time) for the compression gain to approach (exponentially) a new higher target level (the compression 'releasing')]",0.1, 0.1, 2000, 0.1)/1000));
 // release       = detector_group(hslider("[7] Detector Release [unit:ms]   [tooltip: Time constant in ms (1/e smoothing time) for the compression gain to approach (exponentially) a new higher target level (the compression 'releasing')]",0.1, 0.1, 2000, 0.1))/1000;
 //hpf_switch  = detector_group(select2( hslider("[8]sidechain hpf[tooltip: ]", 1, 0, 1, 1), 1.0, 0.0));
-hpf_freq      = detector_group( hslider("[8]sidechain hpf[tooltip: ]", 154, 1, 400, 1));
+hpf_freq      = detector_group( hslider("[8]sidechain hpf[scale:log][tooltip: ]", 154, 1, 400, 1));
 
 prePost = detector_group(checkbox("[9] slow/fast  [tooltip: Unchecked: log  domain return-to-threshold detector
       Checked: linear return-to-fi.zero detector]")*-1)+1;
@@ -137,7 +137,7 @@ decayMult      = ratelimit_knob_group(hslider("[3]decayMult[tooltip: ]", 20000 ,
 decayPower     = ratelimit_knob_group(hslider("[4]decayPower[tooltip: ]", 50, 0, 50 , 0.1));
 GRcompensate   = ratelimit_knob_group(hslider("[5]GRcompensate[tooltip: ]", 1 , 0,10 , 0.001));
 // IM_size        = easy_release;// ratelimit_knob_group(hslider("[5]IM_size[tooltip: ]",108, 1,   rmsMaxSize,   1)*44100/ma.SR); //0.0005 * min(192000.0, max(22050.0, ma.SR));
-IM_size        = ratelimit_knob_group(hslider("[5]IM_size[tooltip: ]",108, 1,   rmsMaxSize,   1)*44100/ma.SR); //0.0005 * min(192000.0, max(22050.0, ma.SR));
+IM_size        = ratelimit_knob_group(hslider("[5]IM_size[scale:log][tooltip: ]",108, 1,   rmsMaxSize,   1)*44100/ma.SR); //0.0005 * min(192000.0, max(22050.0, ma.SR));
 
 powlim(x,base) = x:max(log(MAX_flt)/log(base)):  min(log(MIN_flt)/log(base));
 
