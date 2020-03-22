@@ -64,7 +64,7 @@ ingain        = easy_group(hslider("[0] Input Gain [unit:dB]   [tooltip: The inp
 threshold     = easy_group(hslider("[1] Threshold [unit:dB]   [tooltip: When the signal level exceeds the Threshold (in dB), its level is compressed according to the Ratio]", -27.1, -80, 0, 0.1));
 // strength = easy_group((hslider("[1]strength[tooltip: ]", 0.4145 , 0, 1 , 0.001):pow(strpw)*-22)+11:powerScale);
 strength = easy_group((hslider("[2]strength[tooltip: ]", 1 , 0, 2 , 0.001)));
-det_strength = detector_group((hslider("[2]det strength[tooltip: ]", 1 , 0, 2 , 0.001)));
+det_strength = detector_group((hslider("[2]det strength[tooltip: ]", 1 , 0, 8 , 0.001)));
 strpw = hslider("strpw", 1, 0.001, 1, 0.001);
 attackFader=     easy_group(hslider("[3] Attack [unit:ms]   [tooltip: Time constant in ms (1/e smoothing time) for the compression gain to approach (exponentially) a new lower target level (the compression `kicking in')]", 23.7, 0.1, maxAttack , 0.1));
 maxAttack = 500;
@@ -136,7 +136,8 @@ maxRateDecay   = ratelimit_knob_group(hslider("[2]max decay[unit:dB/s][tooltip: 
 decayMult      = ratelimit_knob_group(hslider("[3]decayMult[tooltip: ]", 20000 , 0,200000 , 100)/100);
 decayPower     = ratelimit_knob_group(hslider("[4]decayPower[tooltip: ]", 50, 0, 50 , 0.1));
 GRcompensate   = ratelimit_knob_group(hslider("[5]GRcompensate[tooltip: ]", 1 , 0,10 , 0.001));
-IM_size        = easy_release;// ratelimit_knob_group(hslider("[5]IM_size[tooltip: ]",108, 1,   rmsMaxSize,   1)*44100/ma.SR); //0.0005 * min(192000.0, max(22050.0, ma.SR));
+// IM_size        = easy_release;// ratelimit_knob_group(hslider("[5]IM_size[tooltip: ]",108, 1,   rmsMaxSize,   1)*44100/ma.SR); //0.0005 * min(192000.0, max(22050.0, ma.SR));
+IM_size        = ratelimit_knob_group(hslider("[5]IM_size[tooltip: ]",108, 1,   rmsMaxSize,   1)*44100/ma.SR); //0.0005 * min(192000.0, max(22050.0, ma.SR));
 
 powlim(x,base) = x:max(log(MAX_flt)/log(base)):  min(log(MIN_flt)/log(base));
 
