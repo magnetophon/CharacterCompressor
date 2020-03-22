@@ -150,7 +150,7 @@ gainHiShelfCrossfade(crossfade,gain,dry) = (dry * (gain*(1-crossfade):ba.db2line
 
 crossfade(x,a,b) = a*(1-x),b*x : +;
 
-rmsFade = _<:crossfade(peakRMS,_,slidingRMSn( rms_speed, rmsMaxSize)); // bypass makes the dsp double as efficient. On silence RMS takes double that (so in my case 7, 13 and 21 %)
+rmsFade = _<:crossfade(peakRMS,abs,slidingRMSn( rms_speed, rmsMaxSize)); // bypass makes the dsp double as efficient. On silence RMS takes double that (so in my case 7, 13 and 21 %)
 
 /*COMP = (1/((1/(((_ <: ( HPF : DETECTOR : RATIO : ba.db2linear : max(ba.db2linear(-140)) : min (1) :pow(prePower):ba.linear2db*/
 /*<: ( RATELIMITER ~ _ ),_:crossfade(ratelimit) : ba.db2linear ): max(MIN_flt) : min (MAX_flt)):pow(1/power))):max(ba.db2linear(-140))*maxGR*2*ma.PI:ma.tanh:/(2*ma.PI))/maxGR)):min(1);*/
