@@ -7,4 +7,5 @@ import("lib/CharacterCompressor.lib");
 
 process =
   // ba.bypass2(checkbox("bypass"),midStereoBlushComp);
-  midStereoBlushComp;
+  // midStereoBlushComp;
+  blushcompN(2);

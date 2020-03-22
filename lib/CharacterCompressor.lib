@@ -200,18 +200,36 @@ COMP(x) = x:detector:shaper:ba.linear2db
 shaper = _<:_,_:pow(powlim(power)):(_-maxGR)*(1/(1-maxGR)): curve_pow(curve):tanshape(shape):_*(1-maxGR):_+maxGR;
 
 // blushcomp(x) =crossfade(dryWet,x,( (( crossfade(feedFwBw,x,_) : ( COMP , x ) : gainHiShelfCrossfade(gainHS))~_)))*(ba.db2linear(outgain))*(1+bypass*-1)+(x*bypass);
+//
+
+GainReduction(x) = ((ingain:ba.db2linear),(x<:(_,_)):(*,_))
+                   : ((( (((crossfade(feedFwBw,_,_): ( COMP <:(_,_))),_): (_,ro.cross(2))) ):((_,(_):gainHiShelfCrossfade(gainHS)),_))~(_,!))
+                   :(!,si.lag_ud(easy_release_knob,0));
+
 blushcomp(x) =
-  (x*(ingain:ba.db2linear))
-  : (( (crossfade(feedFwBw,_,_): ( COMP )) <: ((_,(x):gainHiShelfCrossfade(gainHS)),_))~(_,!))
-  :(!,_):
+  GainReduction(x):
   (
     ( ((x:fi.high_shelf(0,hiShelfFreq)),(((_*strength:meter),x*(ingain:ba.db2linear)):gainHiShelfCrossfade(gainHS))):crossfade(dryWet) *(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass)
   )
 ;
 
+blushcompN(N) =
+  (busN<:(GainReduction(inSum)<:busN),busN):ro.interleave(N,2)
+  :par(i, N,
+       (_ , (_<:(_,_,_)))
+       : (ro.cross(2),_,_)
+       :     ( ((_:fi.high_shelf(0,hiShelfFreq)),(((_*strength:meter),_*(ingain:ba.db2linear)):gainHiShelfCrossfade(gainHS))):crossfade(dryWet) *(ba.db2linear(outgain)))*(1+bypass*-1)+(_*bypass)
+      )
+
+with {
+  busN = si.bus(N);
+  inSum = busN:>_;
+};
+
+
 midStereoBlushComp(x,y) =(x*(ingain:ba.db2linear)+y*(ingain:ba.db2linear)): (( (crossfade(feedFwBw,_,_): ( COMP )) <: ((_,(x+y):gainHiShelfCrossfade(gainHS)),_))~(_,!))
-// :((_*(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass),(_*(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass));
-:!,_<:(
+                                                                            // :((_*(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass),(_*(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass));
+                                                                            :!,si.lag_ud(easy_release_knob,0)<:(
                            ( ((x:fi.high_shelf(0,hiShelfFreq)),(((_*strength:meter),x*(ingain:ba.db2linear)):gainHiShelfCrossfade(gainHS))):crossfade(dryWet) *(ba.db2linear(outgain)))*(1+bypass*-1)+(x*bypass)
                           ,( ((y:fi.high_shelf(0,hiShelfFreq)),(((_*strength:meter),y*(ingain:ba.db2linear)):gainHiShelfCrossfade(gainHS))):crossfade(dryWet) *(ba.db2linear(outgain)))*(1+bypass*-1)+(y*bypass)
 );
