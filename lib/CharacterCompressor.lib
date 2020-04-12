@@ -214,14 +214,16 @@ blushcomp(x) =
 ;
 
 blushcompN(N) =
-  (busN<:(GainReduction(inSum)<:busN),busN):ro.interleave(N,2)
+  (busN<:(inSum:GainReduction<:si.bus(N+1)),busN):(busN,cross1n(N)):(ro.interleave(N,2),_)
   :par(i, N,
        (_ , (_<:(_,_,_)))
        : (ro.cross(2),_,_)
        :     ( ((_:fi.high_shelf(0,hiShelfFreq)),(((_*strength:meter),_*(ingain:ba.db2linear)):gainHiShelfCrossfade(gainHS))):crossfade(dryWet) *(ba.db2linear(outgain)))*(1+bypass*-1)+(_*bypass)
-      )
+    )
+ ,(_*strength)
 
 with {
+  cross1n(n) = route(n+1,n+1, par(i, n+1, i+1, (((i+n)%(n+1))+1)));
   busN = si.bus(N);
   inSum = busN:>_;
 };
