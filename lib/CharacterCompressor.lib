@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Bart Brouns
+ *  Copyright (C) 2023 Bart Brouns
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; version 2 of the License.
@@ -13,13 +13,13 @@ Based on blushcomp mono by Sampo Savolainen
  */
 declare name      "CharacterCompressor";
 declare author    "Bart Brouns";
-declare version   "0.3.3";
-declare copyright "(C) 2014 Bart Brouns";
+declare version   "0.3.4";
+declare copyright "Bart Brouns 2023";
+declare license "GPL-2.0";
 
 import("stdfaust.lib");
 
 import ("lib/compressor-basics.lib");
-// import ("rms.lib");
 
 import ("lib/biquad-hpf.lib");
 import ("lib/slidingReduce.lib");
